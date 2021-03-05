@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 
 	"github.com/fntlnz/mountinfo"
@@ -37,11 +38,15 @@ type datadisk struct {
 }
 
 func (d datadisk) ChangeDevice(newDevice string) (bool, *dbus.Error) {
-	cmd := exec.Command("/usr/bin/datactl", "move", newDevice)
 	fmt.Printf("Changing data disk to %s\n", newDevice)
+	cmd := exec.Command("/usr/bin/datactl", "move", newDevice)
+	cmd.Env = append(os.Environ(),
+		"DATACTL_NOCONFIRM=1",
+	)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
+	fmt.Print(out.String())
 	if err != nil {
 		fmt.Println(err)
 		return false, nil
