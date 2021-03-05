@@ -1,0 +1,14 @@
+[Unit]
+Description=Home Assistant OS Agent
+Requires=dbus.service
+RequiresMountsFor=/mnt/data
+ConditionPathExists=/run/dbus/system_bus_socket
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5s
+ExecStart=/usr/bin/os-agent
+
+[Install]
+WantedBy=multi-user.target
