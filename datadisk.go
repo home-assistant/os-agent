@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"time"
+	"log"
+	"os/exec"
 
 	"github.com/fntlnz/mountinfo"
 	"github.com/godbus/dbus/v5"
@@ -18,7 +20,8 @@ func GetDataMount() *mountinfo.Mountinfo {
 
 	minfo, err := mountinfo.GetMountInfo("/proc/self/mountinfo")
 	if err != nil {
-		fmt.Println(err.Error)
+		log.Fatal(err)
+		return nil
 	}
 
 	for _, info := range minfo {
@@ -33,9 +36,16 @@ type datadisk struct {
 	currentDisk string
 }
 
-func (d datadisk) ChangeDataDisk(newDevice string) (bool, *dbus.Error) {
-	time.Sleep(5 * time.Second)
-	fmt.Println(newDevice)
+func (d datadisk) ChangeDevice(newDevice string) (bool, *dbus.Error) {
+	cmd := exec.Command("/usr/bin/datactl", "move", newDevice)
+	fmt.Printf("Changing data disk to %s\n", newDevice)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println(err)
+		return false, nil
+	}
 	return true, nil
 }
 
@@ -46,8 +56,15 @@ const (
 
 func InitializeDBus(conn *dbus.Conn) {
 
+	/* Since we don't remount data disk at runtime, we can assume the current value remains  */
+	mountInfo := GetDataMount()
+	var currentDisk string = ""
+	if mountInfo != nil {
+		currentDisk = mountInfo.MountSource
+	}
+
 	d := datadisk{
-		currentDisk: "",
+		currentDisk: currentDisk,
 	}
 
 	err := conn.Export(d, objectPath, ifaceName)
@@ -61,10 +78,7 @@ func InitializeDBus(conn *dbus.Conn) {
 				Value:    &d.currentDisk,
 				Writable: false,
 				Emit:     prop.EmitTrue,
-				Callback: func(c *prop.Change) *dbus.Error {
-					fmt.Println(c.Name, "changed to", c.Value)
-					return nil
-				},
+				Callback: nil,
 			},
 		},
 	}

@@ -29,7 +29,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println(fmt.Sprintf("Listening on service %s ...", busName))
+	fmt.Printf("Listening on service %s ...\n", busName)
 	InitializeDBus(conn)
 
 	daemon.SdNotify(false, daemon.SdNotifyReady)
