@@ -1,11 +1,13 @@
 package main
 
 import (
-	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
+	"strings"
+
+	"github.com/home-assistant/os-agent/udisks2"
 
 	"github.com/fntlnz/mountinfo"
 	"github.com/godbus/dbus/v5"
@@ -14,7 +16,8 @@ import (
 )
 
 const (
-	dataMount = "/mnt/data"
+	dataMount              = "/mnt/data"
+	linuxDataPartitionUUID = "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
 )
 
 func GetDataMount() *mountinfo.Mountinfo {
@@ -35,22 +38,101 @@ func GetDataMount() *mountinfo.Mountinfo {
 
 type datadisk struct {
 	currentDisk string
+	conn        *dbus.Conn
+}
+
+var noOptions = map[string]dbus.Variant{}
+
+func GetDataDevice(conn *dbus.Conn, m *udisks2.Manager) (dataDevice *string, err error) {
+	devspec := map[string]dbus.Variant{"label": dbus.MakeVariant("hassos-data")}
+	blockObjects, err := m.ResolveDevice(context.Background(), devspec, noOptions)
+
+	if len(blockObjects) != 1 {
+		return nil, fmt.Errorf("Expected single block device with file system label \"hassos-data\", found %d", len(blockObjects))
+	}
+
+	/* Get Partition object of the data partition */
+	busObjectBlock := conn.Object("org.freedesktop.UDisks2", blockObjects[0])
+	partition := udisks2.NewPartition(busObjectBlock)
+	table, err := partition.GetTable(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	/* Get Block device of partition table */
+	busObjectParentBlock := conn.Object("org.freedesktop.UDisks2", table)
+	parentBlock := udisks2.NewBlock(busObjectParentBlock)
+
+	device, err := parentBlock.GetDevice(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	s := strings.Trim(string(device), "\x00")
+	return &s, nil
+}
+
+func FormatDevice(conn *dbus.Conn, m *udisks2.Manager, devicePath string) (err error) {
+	devspec := map[string]dbus.Variant{"path": dbus.MakeVariant(devicePath)}
+	blockObjects, err := m.ResolveDevice(context.Background(), devspec, noOptions)
+
+	if len(blockObjects) != 1 {
+		return fmt.Errorf("Expected single block device with device path \"%s\", found %d", devicePath, len(blockObjects))
+	}
+
+	blockObjectPath := blockObjects[0]
+	fmt.Printf("Formatting device %s\n", devicePath)
+
+	busObjectParentBlock := conn.Object("org.freedesktop.UDisks2", blockObjectPath)
+	parentBlock := udisks2.NewBlock(busObjectParentBlock)
+	err = parentBlock.Format(context.Background(), "gpt", noOptions)
+	if err != nil {
+		return err
+	}
+
+	parentPartitionTable := udisks2.NewPartitionTable(busObjectParentBlock)
+	createdPartition, err :=
+		parentPartitionTable.CreatePartition(context.Background(), 0, 0,
+			linuxDataPartitionUUID, "hassos-data-external", noOptions)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("New part %s\n", createdPartition)
+
+	return nil
 }
 
 func (d datadisk) ChangeDevice(newDevice string) (bool, *dbus.Error) {
-	fmt.Printf("Changing data disk to %s\n", newDevice)
-	cmd := exec.Command("/usr/bin/datactl", "move", newDevice)
-	cmd.Env = append(os.Environ(),
-		"DATACTL_NOCONFIRM=1",
-	)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	fmt.Print(out.String())
+	fmt.Printf("Request to change data disk to %s.\n", newDevice)
+
+	busObj := d.conn.Object("org.freedesktop.UDisks2", "/org/freedesktop/UDisks2/Manager")
+	manager := udisks2.NewManager(busObj)
+	dataDevice, err := GetDataDevice(d.conn, manager)
 	if err != nil {
-		fmt.Println(err)
-		return false, nil
+		return false, dbus.MakeFailedError(err)
 	}
+
+	fmt.Printf("Data partition is currently on device %s\n", *dataDevice)
+	if *dataDevice == newDevice {
+		return false, dbus.MakeFailedError(fmt.Errorf("Current data device \"%s\" the same as target device. Aborting.", *dataDevice))
+	}
+
+	err = FormatDevice(d.conn, manager, newDevice)
+	if err != nil {
+		return false, dbus.MakeFailedError(err)
+	}
+
+	/* Move request marker for hassos-data.service */
+	fileName := "/mnt/overlay/move-data"
+	_, err = os.Stat(fileName)
+	if os.IsNotExist(err) {
+		file, err := os.Create(fileName)
+		if err != nil {
+			return false, dbus.MakeFailedError(err)
+		}
+		defer file.Close()
+	}
+
 	return true, nil
 }
 
@@ -70,6 +152,7 @@ func InitializeDBus(conn *dbus.Conn) {
 
 	d := datadisk{
 		currentDisk: currentDisk,
+		conn:        conn,
 	}
 
 	err := conn.Export(d, objectPath, ifaceName)
