@@ -43,10 +43,13 @@ type datadisk struct {
 
 var noOptions = map[string]dbus.Variant{}
 
-func GetDataDevice(conn *dbus.Conn, m *udisks2.Manager) (dataDevice *string, err error) {
+func GetDataDevice(conn *dbus.Conn, m *udisks2.Manager) (*string, error) {
 	devspec := map[string]dbus.Variant{"label": dbus.MakeVariant("hassos-data")}
 	blockObjects, err := m.ResolveDevice(context.Background(), devspec, noOptions)
 
+	if err != nil {
+		return nil, err
+	}
 	if len(blockObjects) != 1 {
 		return nil, fmt.Errorf("Expected single block device with file system label \"hassos-data\", found %d", len(blockObjects))
 	}
@@ -72,10 +75,13 @@ func GetDataDevice(conn *dbus.Conn, m *udisks2.Manager) (dataDevice *string, err
 	return &s, nil
 }
 
-func FormatDevice(conn *dbus.Conn, m *udisks2.Manager, devicePath string) (err error) {
+func FormatDevice(conn *dbus.Conn, m *udisks2.Manager, devicePath string) error {
 	devspec := map[string]dbus.Variant{"path": dbus.MakeVariant(devicePath)}
 	blockObjects, err := m.ResolveDevice(context.Background(), devspec, noOptions)
 
+	if err != nil {
+		return err
+	}
 	if len(blockObjects) != 1 {
 		return fmt.Errorf("Expected single block device with device path \"%s\", found %d", devicePath, len(blockObjects))
 	}
