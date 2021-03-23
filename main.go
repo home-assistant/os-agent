@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/home-assistant/os-agent/datadisk"
+
 	"github.com/coreos/go-systemd/v22/daemon"
 	"github.com/godbus/dbus/v5"
 )
@@ -30,7 +32,7 @@ func main() {
 	}
 
 	fmt.Printf("Listening on service %s ...\n", busName)
-	InitializeDBus(conn)
+	datadisk.InitializeDBus(conn)
 
 	daemon.SdNotify(false, daemon.SdNotifyReady)
 	select {}
