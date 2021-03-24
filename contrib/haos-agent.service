@@ -1,7 +1,6 @@
 [Unit]
 Description=Home Assistant OS Agent
 Requires=dbus.service
-RequiresMountsFor=/mnt/data
 ConditionPathExists=/run/dbus/system_bus_socket
 
 [Service]
