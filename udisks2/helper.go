@@ -3,7 +3,6 @@ package udisks2
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/godbus/dbus/v5"
 )
@@ -25,21 +24,27 @@ func NewUDisks2(conn *dbus.Conn) UDisks2Helper {
 	return d
 }
 
-var noOptions = map[string]dbus.Variant{}
+func (u UDisks2Helper) GetPartitionDeviceFromLabel(label string) (*string, error) {
 
-func (u UDisks2Helper) GetDeviceFromLabel(label string) (*string, error) {
-	devspec := map[string]dbus.Variant{"label": dbus.MakeVariant(label)}
-	blockObjects, err := u.manager.ResolveDevice(context.Background(), devspec, noOptions)
-
+	busObject, err := u.manager.ResolveDeviceFromLabel(label)
+	busObjectBlock := u.conn.Object("org.freedesktop.UDisks2", *busObject)
 	if err != nil {
 		return nil, err
 	}
-	if len(blockObjects) != 1 {
-		return nil, fmt.Errorf("Expected single block device with file system label \"%s\", found %d", label, len(blockObjects))
+
+	block := NewBlock(busObjectBlock)
+
+	return block.GetDeviceString(context.Background())
+}
+
+func (u UDisks2Helper) GetRootDeviceFromLabel(label string) (*string, error) {
+
+	busObject, err := u.manager.ResolveDeviceFromLabel(label)
+	busObjectBlock := u.conn.Object("org.freedesktop.UDisks2", *busObject)
+	if err != nil {
+		return nil, err
 	}
 
-	/* Get Partition object of the data partition */
-	busObjectBlock := u.conn.Object("org.freedesktop.UDisks2", blockObjects[0])
 	partition := NewPartition(busObjectBlock)
 	table, err := partition.GetTable(context.Background())
 	if err != nil {
@@ -50,19 +55,35 @@ func (u UDisks2Helper) GetDeviceFromLabel(label string) (*string, error) {
 	busObjectParentBlock := u.conn.Object("org.freedesktop.UDisks2", table)
 	parentBlock := NewBlock(busObjectParentBlock)
 
-	device, err := parentBlock.GetDevice(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	s := strings.Trim(string(device), "\x00")
-	return &s, nil
+	return parentBlock.GetDeviceString(context.Background())
 }
 
-func (u UDisks2Helper) FormatDeviceWithSinglePartition(devicePath string, uuid string, name string) error {
+func (u UDisks2Helper) FormatPartition(devicePath string, fsType string) error {
 	devspec := map[string]dbus.Variant{"path": dbus.MakeVariant(devicePath)}
 	blockObjects, err := u.manager.ResolveDevice(context.Background(), devspec, noOptions)
+	if err != nil {
+		return err
+	}
+	if len(blockObjects) != 1 {
+		return fmt.Errorf("Expected single block device with device path \"%s\", found %d", devicePath, len(blockObjects))
+	}
 
+	fmt.Printf("Formatting block device %s with file system \"%s\".\n", devicePath, fsType)
+	blockObjectPath := blockObjects[0]
+	busObjectParentBlock := u.conn.Object("org.freedesktop.UDisks2", blockObjectPath)
+	parentBlock := NewBlock(busObjectParentBlock)
+	err = parentBlock.Format(context.Background(), fsType, noOptions)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Successfully formatted block device %s.\n", devicePath)
+
+	return nil
+}
+
+func (u UDisks2Helper) PartitionDeviceWithSinglePartition(devicePath string, uuid string, name string) error {
+	devspec := map[string]dbus.Variant{"path": dbus.MakeVariant(devicePath)}
+	blockObjects, err := u.manager.ResolveDevice(context.Background(), devspec, noOptions)
 	if err != nil {
 		return err
 	}
