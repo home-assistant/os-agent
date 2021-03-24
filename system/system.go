@@ -60,11 +60,11 @@ func (d system) FactoryReset() (bool, *dbus.Error) {
 		return false, dbus.MakeFailedError(err)
 	}
 
-	err = udisks2helper.FormatPartition(*dataDevice, "ext4")
+	err = udisks2helper.FormatPartition(*dataDevice, "ext4", "hassos-data")
 	if err != nil {
 		return false, dbus.MakeFailedError(err)
 	}
-	err = udisks2helper.FormatPartition(*overlayDevice, "ext4")
+	err = udisks2helper.FormatPartition(*overlayDevice, "ext4", "hassos-overlay")
 	if err != nil {
 		return false, dbus.MakeFailedError(err)
 	}

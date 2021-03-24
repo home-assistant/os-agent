@@ -58,7 +58,7 @@ func (u UDisks2Helper) GetRootDeviceFromLabel(label string) (*string, error) {
 	return parentBlock.GetDeviceString(context.Background())
 }
 
-func (u UDisks2Helper) FormatPartition(devicePath string, fsType string) error {
+func (u UDisks2Helper) FormatPartition(devicePath string, fsType string, label string) error {
 	devspec := map[string]dbus.Variant{"path": dbus.MakeVariant(devicePath)}
 	blockObjects, err := u.manager.ResolveDevice(context.Background(), devspec, noOptions)
 	if err != nil {
@@ -72,7 +72,8 @@ func (u UDisks2Helper) FormatPartition(devicePath string, fsType string) error {
 	blockObjectPath := blockObjects[0]
 	busObjectParentBlock := u.conn.Object("org.freedesktop.UDisks2", blockObjectPath)
 	parentBlock := NewBlock(busObjectParentBlock)
-	err = parentBlock.Format(context.Background(), fsType, noOptions)
+	formatOptions := map[string]dbus.Variant{"label": dbus.MakeVariant(label)}
+	err = parentBlock.Format(context.Background(), fsType, formatOptions)
 	if err != nil {
 		return err
 	}
