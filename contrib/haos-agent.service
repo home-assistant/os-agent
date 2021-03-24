@@ -1,12 +1,14 @@
 [Unit]
 Description=Home Assistant OS Agent
-Requires=dbus.service udisks2.service
-ConditionPathExists=/run/dbus/system_bus_socket
+DefaultDependencies=no
+Requires=dbus.socket udisks2.service
+After=dbus.socket
 
 [Service]
 Type=notify
 Restart=always
 RestartSec=5s
+Environment="DBUS_SYSTEM_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket"
 ExecStart=/usr/bin/os-agent
 
 [Install]
