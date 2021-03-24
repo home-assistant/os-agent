@@ -27,11 +27,11 @@ func NewUDisks2(conn *dbus.Conn) UDisks2Helper {
 func (u UDisks2Helper) GetPartitionDeviceFromLabel(label string) (*string, error) {
 
 	busObject, err := u.manager.ResolveDeviceFromLabel(label)
-	busObjectBlock := u.conn.Object("org.freedesktop.UDisks2", *busObject)
 	if err != nil {
 		return nil, err
 	}
 
+	busObjectBlock := u.conn.Object("org.freedesktop.UDisks2", *busObject)
 	block := NewBlock(busObjectBlock)
 
 	return block.GetDeviceString(context.Background())
@@ -40,11 +40,11 @@ func (u UDisks2Helper) GetPartitionDeviceFromLabel(label string) (*string, error
 func (u UDisks2Helper) GetRootDeviceFromLabel(label string) (*string, error) {
 
 	busObject, err := u.manager.ResolveDeviceFromLabel(label)
-	busObjectBlock := u.conn.Object("org.freedesktop.UDisks2", *busObject)
 	if err != nil {
 		return nil, err
 	}
 
+	busObjectBlock := u.conn.Object("org.freedesktop.UDisks2", *busObject)
 	partition := NewPartition(busObjectBlock)
 	table, err := partition.GetTable(context.Background())
 	if err != nil {
