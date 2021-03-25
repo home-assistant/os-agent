@@ -39,7 +39,7 @@ func getAndCheckBusObjectFromLabel(udisks2helper udisks2.UDisks2Helper, label st
 	return dataBusObject, nil
 }
 
-func (d system) FactoryReset() (bool, *dbus.Error) {
+func (d system) WipeDevice() (bool, *dbus.Error) {
 	fmt.Printf("Wipe device data.\n")
 
 	udisks2helper := udisks2.NewUDisks2(d.conn)
