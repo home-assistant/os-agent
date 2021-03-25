@@ -24,17 +24,14 @@ func NewUDisks2(conn *dbus.Conn) UDisks2Helper {
 	return d
 }
 
-func (u UDisks2Helper) GetPartitionDeviceFromLabel(label string) (*string, error) {
+func (u UDisks2Helper) GetBusObjectFromLabel(label string) (dbus.BusObject, error) {
 
 	busObject, err := u.manager.ResolveDeviceFromLabel(label)
 	if err != nil {
 		return nil, err
 	}
 
-	busObjectBlock := u.conn.Object("org.freedesktop.UDisks2", *busObject)
-	block := NewBlock(busObjectBlock)
-
-	return block.GetDeviceString(context.Background())
+	return u.conn.Object("org.freedesktop.UDisks2", *busObject), nil
 }
 
 func (u UDisks2Helper) GetRootDeviceFromLabel(label string) (*string, error) {
@@ -58,7 +55,18 @@ func (u UDisks2Helper) GetRootDeviceFromLabel(label string) (*string, error) {
 	return parentBlock.GetDeviceString(context.Background())
 }
 
-func (u UDisks2Helper) FormatPartition(devicePath string, fsType string, label string) error {
+func (u UDisks2Helper) FormatPartition(blockObjectPath dbus.BusObject, fsType string, label string) error {
+	parentBlock := NewBlock(blockObjectPath)
+	formatOptions := map[string]dbus.Variant{"label": dbus.MakeVariant(label)}
+	err := parentBlock.Format(context.Background(), fsType, formatOptions)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u UDisks2Helper) FormatPartitionFromDevicePath(devicePath string, fsType string, label string) error {
 	devspec := map[string]dbus.Variant{"path": dbus.MakeVariant(devicePath)}
 	blockObjects, err := u.manager.ResolveDevice(context.Background(), devspec, noOptions)
 	if err != nil {
@@ -70,13 +78,13 @@ func (u UDisks2Helper) FormatPartition(devicePath string, fsType string, label s
 
 	fmt.Printf("Formatting block device %s with file system \"%s\".\n", devicePath, fsType)
 	blockObjectPath := blockObjects[0]
-	busObjectParentBlock := u.conn.Object("org.freedesktop.UDisks2", blockObjectPath)
-	parentBlock := NewBlock(busObjectParentBlock)
-	formatOptions := map[string]dbus.Variant{"label": dbus.MakeVariant(label)}
-	err = parentBlock.Format(context.Background(), fsType, formatOptions)
+	busObjectBlock := u.conn.Object("org.freedesktop.UDisks2", blockObjectPath)
+
+	err = u.FormatPartition(busObjectBlock, fsType, label)
 	if err != nil {
 		return err
 	}
+
 	fmt.Printf("Successfully formatted block device %s.\n", devicePath)
 
 	return nil

@@ -21,6 +21,21 @@ func (o *Block) GetDeviceString(ctx context.Context) (*string, error) {
 	return &s, nil
 }
 
+func (f *Filesystem) GetMountPointsString(ctx context.Context) ([]string, error) {
+	dataMountPoints, err := f.GetMountPoints(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	dataMountPointsString := make([]string, len(dataMountPoints))
+	for i, ba := range dataMountPoints {
+		s := strings.Trim(string(ba), "\x00")
+		dataMountPointsString[i] = s
+	}
+
+	return dataMountPointsString, nil
+}
+
 func (m *Manager) ResolveDeviceFromLabel(label string) (*dbus.ObjectPath, error) {
 	devspec := map[string]dbus.Variant{"label": dbus.MakeVariant(label)}
 	blockObjects, err := m.ResolveDevice(context.Background(), devspec, noOptions)

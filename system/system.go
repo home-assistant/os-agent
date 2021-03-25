@@ -7,85 +7,61 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
 	"github.com/home-assistant/os-agent/udisks2"
-
-	systemddbus "github.com/coreos/go-systemd/v22/dbus"
 )
 
 const (
-	objectPath = "/io/homeassistant/os/System"
-	ifaceName  = "io.homeassistant.os.System"
+	objectPath             = "/io/homeassistant/os/System"
+	ifaceName              = "io.homeassistant.os.System"
+	labelDataFileSystem    = "hassos-data"
+	labelOverlayFileSystem = "hassos-overlay"
 )
 
 type system struct {
 	conn *dbus.Conn
 }
 
-func SystemdIsolate(c *systemddbus.Conn, target string) error {
-	result := make(chan string, 1) // catch result information
-	_, err := c.StartUnitContext(context.Background(), target, "isolate", result)
+func getAndCheckBusObjectFromLabel(udisks2helper udisks2.UDisks2Helper, label string) (dbus.BusObject, error) {
+	dataBusObject, err := udisks2helper.GetBusObjectFromLabel(label)
 	if err != nil {
-		return err
-	}
-	if result == nil {
-		return fmt.Errorf("Isolating haos-maintenance.target failed: Result is nil")
+		return nil, dbus.MakeFailedError(err)
 	}
 
-	status := <-result
-	if status != "done" {
-		return fmt.Errorf("Isolating haos-maintenance.target failed: Unknown return string: %s", status)
+	dataFilesystem := udisks2.NewFilesystem(dataBusObject)
+	dataMountPoints, err := dataFilesystem.GetMountPointsString(context.Background())
+	if err != nil {
+		return nil, dbus.MakeFailedError(err)
 	}
 
-	return nil
+	if len(dataMountPoints) > 0 {
+		return nil, dbus.MakeFailedError(fmt.Errorf("Device with label \"%s\" is mounted at %s, aborting.", label, dataMountPoints))
+	}
+
+	return dataBusObject, nil
 }
 
 func (d system) FactoryReset() (bool, *dbus.Error) {
 	fmt.Printf("Wipe device data.\n")
 
-	c, err := systemddbus.NewSystemConnection()
-	if err != nil {
-		return false, dbus.MakeFailedError(err)
-	}
-
-	states, err := c.ListUnitsByNames([]string{"default.target"})
-	if err != nil {
-		return false, dbus.MakeFailedError(err)
-	}
-	if len(states) < 1 {
-		return false, dbus.MakeFailedError(fmt.Errorf("Unit \"default.target\" not found."))
-	}
-
-	fmt.Printf("State of \"default.target\" is currently %s\n", states[0].ActiveState)
-
-	err = SystemdIsolate(c, "haos-maintenance.target")
-	if err != nil {
-		return false, dbus.MakeFailedError(err)
-	}
-
 	udisks2helper := udisks2.NewUDisks2(d.conn)
-	dataDevice, err := udisks2helper.GetPartitionDeviceFromLabel("hassos-data")
+	dataBusObject, err := getAndCheckBusObjectFromLabel(udisks2helper, labelDataFileSystem)
 	if err != nil {
 		return false, dbus.MakeFailedError(err)
 	}
 
-	overlayDevice, err := udisks2helper.GetPartitionDeviceFromLabel("hassos-overlay")
+	overlayBusObject, err := getAndCheckBusObjectFromLabel(udisks2helper, labelOverlayFileSystem)
 	if err != nil {
 		return false, dbus.MakeFailedError(err)
 	}
 
-	err = udisks2helper.FormatPartition(*dataDevice, "ext4", "hassos-data")
+	err = udisks2helper.FormatPartition(dataBusObject, "ext4", labelDataFileSystem)
 	if err != nil {
 		return false, dbus.MakeFailedError(err)
 	}
-	err = udisks2helper.FormatPartition(*overlayDevice, "ext4", "hassos-overlay")
+	err = udisks2helper.FormatPartition(overlayBusObject, "ext4", labelOverlayFileSystem)
 	if err != nil {
 		return false, dbus.MakeFailedError(err)
 	}
 	fmt.Printf("Successfully wiped device data.\n")
-
-	err = SystemdIsolate(c, "default.target")
-	if err != nil {
-		return false, dbus.MakeFailedError(err)
-	}
 
 	return true, nil
 }
