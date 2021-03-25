@@ -1,6 +1,7 @@
 package system
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/godbus/dbus/v5"
@@ -21,7 +22,7 @@ type system struct {
 
 func SystemdIsolate(c *systemddbus.Conn, target string) error {
 	result := make(chan string, 1) // catch result information
-	_, err := c.StartUnit(target, "isolate", result)
+	_, err := c.StartUnitContext(context.Background(), target, "isolate", result)
 	if err != nil {
 		return err
 	}
@@ -38,12 +39,23 @@ func SystemdIsolate(c *systemddbus.Conn, target string) error {
 }
 
 func (d system) FactoryReset() (bool, *dbus.Error) {
-	fmt.Printf("Factory resetting this device.\n")
+	fmt.Printf("Wipe device data.\n")
 
 	c, err := systemddbus.NewSystemConnection()
 	if err != nil {
 		return false, dbus.MakeFailedError(err)
 	}
+
+	states, err := c.ListUnitsByNames([]string{"default.target"})
+	if err != nil {
+		return false, dbus.MakeFailedError(err)
+	}
+	if len(states) < 1 {
+		return false, dbus.MakeFailedError(fmt.Errorf("Unit \"default.target\" not found."))
+	}
+
+	fmt.Printf("State of \"default.target\" is currently %s\n", states[0].ActiveState)
+
 	err = SystemdIsolate(c, "haos-maintenance.target")
 	if err != nil {
 		return false, dbus.MakeFailedError(err)
@@ -68,6 +80,7 @@ func (d system) FactoryReset() (bool, *dbus.Error) {
 	if err != nil {
 		return false, dbus.MakeFailedError(err)
 	}
+	fmt.Printf("Successfully wiped device data.\n")
 
 	err = SystemdIsolate(c, "default.target")
 	if err != nil {
