@@ -1,11 +1,10 @@
 [Unit]
 Description=Home Assistant OS Agent
-Requires=dbus.service
-RequiresMountsFor=/mnt/data
+Requires=dbus.service udisks2.service
 ConditionPathExists=/run/dbus/system_bus_socket
 
 [Service]
-Type=simple
+Type=notify
 Restart=always
 RestartSec=5s
 ExecStart=/usr/bin/os-agent

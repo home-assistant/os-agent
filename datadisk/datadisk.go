@@ -43,7 +43,7 @@ func (d datadisk) ChangeDevice(newDevice string) (bool, *dbus.Error) {
 	fmt.Printf("Request to change data disk to %s.\n", newDevice)
 
 	udisks2helper := udisks2.NewUDisks2(d.conn)
-	dataDevice, err := udisks2helper.GetDeviceFromLabel("hassos-data")
+	dataDevice, err := udisks2helper.GetRootDeviceFromLabel("hassos-data")
 	if err != nil {
 		return false, dbus.MakeFailedError(err)
 	}
@@ -53,7 +53,7 @@ func (d datadisk) ChangeDevice(newDevice string) (bool, *dbus.Error) {
 		return false, dbus.MakeFailedError(fmt.Errorf("Current data device \"%s\" the same as target device. Aborting.", *dataDevice))
 	}
 
-	err = udisks2helper.FormatDeviceWithSinglePartition(newDevice, linuxDataPartitionUUID, "hassos-data-external")
+	err = udisks2helper.PartitionDeviceWithSinglePartition(newDevice, linuxDataPartitionUUID, "hassos-data-external")
 	if err != nil {
 		return false, dbus.MakeFailedError(err)
 	}
