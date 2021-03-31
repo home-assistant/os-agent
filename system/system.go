@@ -3,6 +3,8 @@ package system
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
@@ -14,6 +16,8 @@ const (
 	ifaceName              = "io.homeassistant.os.System"
 	labelDataFileSystem    = "hassos-data"
 	labelOverlayFileSystem = "hassos-overlay"
+	kernelCommandLine      = "/mnt/boot/cmdline.txt"
+	tmpKernelCommandLine   = "/mnt/boot/.tmp.cmdline.txt"
 )
 
 type system struct {
@@ -63,6 +67,34 @@ func (d system) WipeDevice() (bool, *dbus.Error) {
 	}
 	fmt.Printf("Successfully wiped device data.\n")
 
+	return true, nil
+}
+
+func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
+
+	data, err := ioutil.ReadFile(kernelCommandLine)
+	if err != nil {
+		fmt.Println(err)
+		return false, dbus.MakeFailedError(err)
+	}
+
+	datastr := string(data)
+	datastr += " haos.wipe=1"
+
+	err = ioutil.WriteFile(tmpKernelCommandLine, []byte(datastr), 0644)
+	if err != nil {
+		fmt.Println(err)
+		return false, dbus.MakeFailedError(err)
+	}
+
+	// Boot is mounted sync on Home Assistant OS, so just rename should be fine.
+	err = os.Rename(tmpKernelCommandLine, kernelCommandLine)
+	if err != nil {
+		fmt.Println(err)
+		return false, dbus.MakeFailedError(err)
+	}
+
+	fmt.Printf("Device will get wiped on next reboot!\n")
 	return true, nil
 }
 
