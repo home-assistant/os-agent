@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
@@ -78,7 +79,7 @@ func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
 		return false, dbus.MakeFailedError(err)
 	}
 
-	datastr := string(data)
+	datastr := strings.TrimSpace(string(data))
 	datastr += " haos.wipe=1"
 
 	err = ioutil.WriteFile(tmpKernelCommandLine, []byte(datastr), 0644)
