@@ -2,5 +2,6 @@ github.com/coreos/go-systemd/v22 v22.3.0 h1:C8u/Ljj8G8O6rqWJh2J8cDyeEFBMWvXlvJ/c
 github.com/coreos/go-systemd/v22 v22.3.0/go.mod h1:xO0FLkIi5MaZafQlIrOotqXZ90ih+1atmu1JpKERPPk=
 github.com/fntlnz/mountinfo v0.0.0-20171106231217-40cb42681fad h1:7dkG+DBBIETkv0nraI5oMvN4M5X3i75q7xq68eIq5Ag=
 github.com/fntlnz/mountinfo v0.0.0-20171106231217-40cb42681fad/go.mod h1:OJmEqKcMeJq0teE8CysGMs/5Ulch9FogT/MmOzE1U9o=
-github.com/godbus/dbus/v5 v5.0.3 h1:ZqHaoEF7TBzh4jzPmqVhE/5A1z9of6orkAe5uHoAeME=
 github.com/godbus/dbus/v5 v5.0.3/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
+github.com/godbus/dbus/v5 v5.0.4 h1:9349emZab16e7zQvpmsbtjc18ykshndd8y2PG3sgJbA=
+github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
