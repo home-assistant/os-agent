@@ -76,7 +76,7 @@ func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
 
 	data, err := ioutil.ReadFile(kernelCommandLine)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return false, dbus.MakeFailedError(err)
 	}
 
@@ -85,14 +85,14 @@ func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
 
 	err = ioutil.WriteFile(tmpKernelCommandLine, []byte(datastr), 0644)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return false, dbus.MakeFailedError(err)
 	}
 
 	// Boot is mounted sync on Home Assistant OS, so just rename should be fine.
 	err = os.Rename(tmpKernelCommandLine, kernelCommandLine)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return false, dbus.MakeFailedError(err)
 	}
 
@@ -125,7 +125,7 @@ func InitializeDBus(conn *dbus.Conn) {
 	err = conn.Export(dbus_xml_str, objectPath,
 		"org.freedesktop.DBus.Introspectable")
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	log.Printf("Exposing object %s with interface %s ...", objectPath, ifaceName)

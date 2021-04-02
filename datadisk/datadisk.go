@@ -40,7 +40,7 @@ type datadisk struct {
 }
 
 func (d datadisk) ChangeDevice(newDevice string) (bool, *dbus.Error) {
-	fmt.Printf("Request to change data disk to %s.\n", newDevice)
+	log.Printf("Request to change data disk to %s.", newDevice)
 
 	udisks2helper := udisks2.NewUDisks2(d.conn)
 	dataDevice, err := udisks2helper.GetRootDeviceFromLabel("hassos-data")
@@ -93,7 +93,7 @@ func InitializeDBus(conn *dbus.Conn) {
 
 	err := conn.Export(d, objectPath, ifaceName)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	propsSpec := map[string]map[string]*prop.Prop{
@@ -108,7 +108,7 @@ func InitializeDBus(conn *dbus.Conn) {
 	}
 	props, err := prop.Export(conn, objectPath, propsSpec)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	node := &introspect.Node{}
@@ -127,7 +127,7 @@ func InitializeDBus(conn *dbus.Conn) {
 	err = conn.Export(dbus_xml_str, objectPath,
 		"org.freedesktop.DBus.Introspectable")
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	log.Printf("Exposing object %s with interface %s ...", objectPath, ifaceName)

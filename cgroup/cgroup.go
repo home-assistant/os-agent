@@ -48,7 +48,7 @@ func InitializeDBus(conn *dbus.Conn) {
 	err = conn.Export(dbus_xml_str, objectPath,
 		"org.freedesktop.DBus.Introspectable")
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	log.Printf("Exposing object %s with interface %s ...", objectPath, ifaceName)
