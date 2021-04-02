@@ -130,5 +130,5 @@ func InitializeDBus(conn *dbus.Conn) {
 		panic(err)
 	}
 
-	fmt.Printf("Exposing object %s with interface %s ...\n", objectPath, ifaceName)
+	log.Printf("Exposing object %s with interface %s ...", objectPath, ifaceName)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 
@@ -66,7 +67,7 @@ func (d system) WipeDevice() (bool, *dbus.Error) {
 	if err != nil {
 		return false, dbus.MakeFailedError(err)
 	}
-	fmt.Printf("Successfully wiped device data.\n")
+	log.Printf("Successfully wiped device data.")
 
 	return true, nil
 }
@@ -95,7 +96,7 @@ func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
 		return false, dbus.MakeFailedError(err)
 	}
 
-	fmt.Printf("Device will get wiped on next reboot!\n")
+	log.Printf("Device will get wiped on next reboot!")
 	return true, nil
 }
 
@@ -127,5 +128,5 @@ func InitializeDBus(conn *dbus.Conn) {
 		panic(err)
 	}
 
-	fmt.Printf("Exposing object %s with interface %s ...\n", objectPath, ifaceName)
+	log.Printf("Exposing object %s with interface %s ...", objectPath, ifaceName)
 }
