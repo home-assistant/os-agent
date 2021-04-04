@@ -1,7 +1,9 @@
 package cgroup
 
 import (
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
@@ -18,6 +20,25 @@ type cgroup struct {
 }
 
 func (d cgroup) UpdateDevicesAllowed(containerID string, permission string) (bool, *dbus.Error) {
+	allowedFile := CGroupFSDockerDevices + containerID + "/devices.allow"
+
+	// Check if file/container exists
+	_, err := os.Stat(allowedFile)
+	if os.IsNotExist(err) {
+		return false, dbus.MakeFailedError(fmt.Errorf("Can't find Container '%s' for adjust CGroup devices.", containerID))
+	}
+
+	// Write permission adjustments
+	file, err := os.Create(allowedFile)
+	if err != nil {
+		return false, dbus.MakeFailedError(fmt.Errorf("Can't open CGroup devices '%s': %s", allowedFile, err))
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(permission + "\n")
+	if err != nil {
+		return false, dbus.MakeFailedError(fmt.Errorf("Can't write CGroup permission '%s': %s", permission, err))
+	}
 
 	log.Printf("Permission '%s', granted for Container '%s'", containerID, permission)
 	return true, nil
