@@ -10,7 +10,9 @@ import (
 )
 
 const (
-	busName = "io.homeassistant.os"
+	busName    = "io.homeassistant.os"
+	objectPath = "/io/homeassistant/os"
+	version    = "dev"
 )
 
 func main() {
@@ -20,6 +22,7 @@ func main() {
 		logging.Critical.Panic(err)
 	}
 
+	// Init Dbus
 	reply, err := conn.RequestName(busName,
 		dbus.NameFlagDoNotQueue)
 	if err != nil {
@@ -28,6 +31,9 @@ func main() {
 	if reply != dbus.RequestNameReplyPrimaryOwner {
 		logging.Critical.Panic("name already taken")
 	}
+
+	// Set base Property
+	base_properties(conn)
 
 	logging.Info.Printf("Listening on service %s ...", busName)
 	datadisk.InitializeDBus(conn)
