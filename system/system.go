@@ -9,6 +9,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
+	"github.com/godbus/dbus/v5/prop"
 
 	"github.com/home-assistant/os-agent/udisks2"
 	logging "github.com/home-assistant/os-agent/utils/log"
@@ -111,22 +112,21 @@ func InitializeDBus(conn *dbus.Conn) {
 		panic(err)
 	}
 
-	node := &introspect.Node{}
-	node.Name = ifaceName
-	iface := &introspect.Interface{}
+	node := &introspect.Node{
+		Name: objectPath,
+		Interfaces: []introspect.Interface{
+			introspect.IntrospectData,
+			prop.IntrospectData,
+			{
+				Name:    ifaceName,
+				Methods: introspect.Methods(d),
+			},
+		},
+	}
 
-	iface.Name = ifaceName
-
-	mts := introspect.Methods(d)
-	iface.Methods = mts
-
-	node.Interfaces = append(node.Interfaces, *iface)
-
-	dbus_xml_str := introspect.NewIntrospectable(node)
-	err = conn.Export(dbus_xml_str, objectPath,
-		"org.freedesktop.DBus.Introspectable")
+	err = conn.Export(introspect.NewIntrospectable(node), objectPath, "org.freedesktop.DBus.Introspectable")
 	if err != nil {
-		panic(err)
+		logging.Critical.Panic(err)
 	}
 
 	logging.Info.Printf("Exposing object %s with interface %s ...", objectPath, ifaceName)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/home-assistant/os-agent/apparmor"
 	"github.com/home-assistant/os-agent/datadisk"
 	"github.com/home-assistant/os-agent/system"
 	logging "github.com/home-assistant/os-agent/utils/log"
@@ -41,6 +42,7 @@ func main() {
 	logging.Info.Printf("Listening on service %s ...", busName)
 	datadisk.InitializeDBus(conn)
 	system.InitializeDBus(conn)
+	apparmor.InitializeDBus(conn)
 
 	_, err = daemon.SdNotify(false, daemon.SdNotifyReady)
 	if err != nil {
@@ -66,7 +68,7 @@ func InitializeDBus(conn *dbus.Conn) {
 		logging.Critical.Panic(err)
 	}
 
-	n := &introspect.Node{
+	node := &introspect.Node{
 		Name: objectPath,
 		Interfaces: []introspect.Interface{
 			introspect.IntrospectData,
@@ -77,7 +79,7 @@ func InitializeDBus(conn *dbus.Conn) {
 			},
 		},
 	}
-	err = conn.Export(introspect.NewIntrospectable(n), objectPath, "org.freedesktop.DBus.Introspectable")
+	err = conn.Export(introspect.NewIntrospectable(node), objectPath, "org.freedesktop.DBus.Introspectable")
 	if err != nil {
 		logging.Critical.Panic(err)
 	}
