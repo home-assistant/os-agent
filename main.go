@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/home-assistant/os-agent/datadisk"
 	"github.com/home-assistant/os-agent/system"
+	logging "github.com/home-assistant/os-agent/utils/log"
 
 	"github.com/coreos/go-systemd/v22/daemon"
 	"github.com/godbus/dbus/v5"
@@ -19,23 +17,25 @@ func main() {
 
 	conn, err := dbus.SystemBus()
 	if err != nil {
-		panic(err)
+		logging.Critical.Panic(err)
 	}
 
 	reply, err := conn.RequestName(busName,
 		dbus.NameFlagDoNotQueue)
 	if err != nil {
-		panic(err)
+		logging.Critical.Panic(err)
 	}
 	if reply != dbus.RequestNameReplyPrimaryOwner {
-		fmt.Fprintln(os.Stderr, "name already taken")
-		os.Exit(1)
+		logging.Critical.Panic("name already taken")
 	}
 
-	fmt.Printf("Listening on service %s ...\n", busName)
+	logging.Info.Printf("Listening on service %s ...", busName)
 	datadisk.InitializeDBus(conn)
 	system.InitializeDBus(conn)
 
-	daemon.SdNotify(false, daemon.SdNotifyReady)
+	_, err = daemon.SdNotify(false, daemon.SdNotifyReady)
+	if err != nil {
+		logging.Critical.Panic(err)
+	}
 	select {}
 }

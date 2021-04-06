@@ -5,12 +5,13 @@ import (
 	"log"
 	"os"
 
-	"github.com/home-assistant/os-agent/udisks2"
-
 	"github.com/fntlnz/mountinfo"
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
 	"github.com/godbus/dbus/v5/prop"
+
+	"github.com/home-assistant/os-agent/udisks2"
+	logging "github.com/home-assistant/os-agent/utils/log"
 )
 
 const (
@@ -40,7 +41,7 @@ type datadisk struct {
 }
 
 func (d datadisk) ChangeDevice(newDevice string) (bool, *dbus.Error) {
-	fmt.Printf("Request to change data disk to %s.\n", newDevice)
+	logging.Info.Printf("Request to change data disk to %s.", newDevice)
 
 	udisks2helper := udisks2.NewUDisks2(d.conn)
 	dataDevice, err := udisks2helper.GetRootDeviceFromLabel("hassos-data")
@@ -48,7 +49,7 @@ func (d datadisk) ChangeDevice(newDevice string) (bool, *dbus.Error) {
 		return false, dbus.MakeFailedError(err)
 	}
 
-	fmt.Printf("Data partition is currently on device %s\n", *dataDevice)
+	logging.Info.Printf("Data partition is currently on device %s.", *dataDevice)
 	if *dataDevice == newDevice {
 		return false, dbus.MakeFailedError(fmt.Errorf("Current data device \"%s\" the same as target device. Aborting.", *dataDevice))
 	}
@@ -130,5 +131,5 @@ func InitializeDBus(conn *dbus.Conn) {
 		panic(err)
 	}
 
-	fmt.Printf("Exposing object %s with interface %s ...\n", objectPath, ifaceName)
+	logging.Info.Printf("Exposing object %s with interface %s ...", objectPath, ifaceName)
 }
