@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/home-assistant/os-agent/apparmor"
+	"github.com/home-assistant/os-agent/cgroup"
 	"github.com/home-assistant/os-agent/datadisk"
 	"github.com/home-assistant/os-agent/system"
 	logging "github.com/home-assistant/os-agent/utils/log"
@@ -43,6 +44,7 @@ func main() {
 	datadisk.InitializeDBus(conn)
 	system.InitializeDBus(conn)
 	apparmor.InitializeDBus(conn)
+	cgroup.InitializeDBus(conn)
 
 	_, err = daemon.SdNotify(false, daemon.SdNotifyReady)
 	if err != nil {
