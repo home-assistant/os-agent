@@ -11,6 +11,7 @@ RUN if [ "${INSTALL_NODE}" = "true" ]; then su vscode -c "source /usr/local/shar
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
         dbus \
+        libglib2.0-bin \
     && rm -rf /var/lib/apt/lists/*
 
 

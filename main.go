@@ -7,6 +7,8 @@ import (
 
 	"github.com/coreos/go-systemd/v22/daemon"
 	"github.com/godbus/dbus/v5"
+	"github.com/godbus/dbus/v5/introspect"
+	"github.com/godbus/dbus/v5/prop"
 )
 
 const (
@@ -23,8 +25,7 @@ func main() {
 	}
 
 	// Init Dbus
-	reply, err := conn.RequestName(busName,
-		dbus.NameFlagDoNotQueue)
+	reply, err := conn.RequestName(busName, dbus.NameFlagDoNotQueue)
 	if err != nil {
 		logging.Critical.Panic(err)
 	}
@@ -32,8 +33,8 @@ func main() {
 		logging.Critical.Panic("name already taken")
 	}
 
-	// Set base Property
-	base_properties(conn)
+	// Set base Property / functionality
+	InitializeDBus(conn)
 
 	logging.Info.Printf("Listening on service %s ...", busName)
 	datadisk.InitializeDBus(conn)
@@ -44,4 +45,40 @@ func main() {
 		logging.Critical.Panic(err)
 	}
 	select {}
+}
+
+func InitializeDBus(conn *dbus.Conn) {
+	propsSpec := map[string]map[string]*prop.Prop{
+		busName: {
+			"Version": {
+				version,
+				false,
+				prop.EmitInvalidates,
+				nil,
+			},
+		},
+	}
+
+	props, err := prop.Export(conn, objectPath, propsSpec)
+	if err != nil {
+		logging.Critical.Panic(err)
+	}
+
+	n := &introspect.Node{
+		Name: objectPath,
+		Interfaces: []introspect.Interface{
+			introspect.IntrospectData,
+			prop.IntrospectData,
+			{
+				Name:       busName,
+				Properties: props.Introspection(busName),
+			},
+		},
+	}
+	err = conn.Export(introspect.NewIntrospectable(n), objectPath, "org.freedesktop.DBus.Introspectable")
+	if err != nil {
+		logging.Critical.Panic(err)
+	}
+
+	logging.Info.Printf("Exposing object %s with interface %s ...", objectPath, busName)
 }
