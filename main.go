@@ -51,10 +51,10 @@ func InitializeDBus(conn *dbus.Conn) {
 	propsSpec := map[string]map[string]*prop.Prop{
 		busName: {
 			"Version": {
-				version,
-				false,
-				prop.EmitInvalidates,
-				nil,
+				Value:    version,
+				Writable: false,
+				Emit:     prop.EmitInvalidates,
+				Callback: nil,
 			},
 		},
 	}
