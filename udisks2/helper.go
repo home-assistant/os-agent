@@ -103,7 +103,7 @@ func (u UDisks2Helper) PartitionDeviceWithSinglePartition(devicePath string, uui
 	}
 
 	blockObjectPath := blockObjects[0]
-	logging.Info.Printf("Formatting device %s\n", devicePath)
+	logging.Info.Printf("Formatting device %s", devicePath)
 
 	busObjectParentBlock := u.conn.Object("org.freedesktop.UDisks2", blockObjectPath)
 	parentBlock := NewBlock(busObjectParentBlock)
