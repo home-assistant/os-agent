@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/godbus/dbus/v5"
+
+	logging "github.com/home-assistant/os-agent/utils/log"
 )
 
 type UDisks2Helper struct {
@@ -76,7 +78,7 @@ func (u UDisks2Helper) FormatPartitionFromDevicePath(devicePath string, fsType s
 		return fmt.Errorf("Expected single block device with device path \"%s\", found %d", devicePath, len(blockObjects))
 	}
 
-	fmt.Printf("Formatting block device %s with file system \"%s\".\n", devicePath, fsType)
+	logging.Info.Printf("Formatting block device %s with file system \"%s\".", devicePath, fsType)
 	blockObjectPath := blockObjects[0]
 	busObjectBlock := u.conn.Object("org.freedesktop.UDisks2", blockObjectPath)
 
@@ -85,7 +87,7 @@ func (u UDisks2Helper) FormatPartitionFromDevicePath(devicePath string, fsType s
 		return err
 	}
 
-	fmt.Printf("Successfully formatted block device %s.\n", devicePath)
+	logging.Info.Printf("Successfully formatted block device %s.", devicePath)
 
 	return nil
 }
@@ -101,7 +103,7 @@ func (u UDisks2Helper) PartitionDeviceWithSinglePartition(devicePath string, uui
 	}
 
 	blockObjectPath := blockObjects[0]
-	fmt.Printf("Formatting device %s\n", devicePath)
+	logging.Info.Printf("Formatting device %s\n", devicePath)
 
 	busObjectParentBlock := u.conn.Object("org.freedesktop.UDisks2", blockObjectPath)
 	parentBlock := NewBlock(busObjectParentBlock)
@@ -117,7 +119,7 @@ func (u UDisks2Helper) PartitionDeviceWithSinglePartition(devicePath string, uui
 	if err != nil {
 		return err
 	}
-	fmt.Printf("New partition D-Bus object %s\n", createdPartition)
+	logging.Info.Printf("New partition D-Bus object %s.", createdPartition)
 
 	return nil
 }

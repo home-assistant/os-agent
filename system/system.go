@@ -9,7 +9,9 @@ import (
 
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
+
 	"github.com/home-assistant/os-agent/udisks2"
+	logging "github.com/home-assistant/os-agent/utils/log"
 )
 
 const (
@@ -45,7 +47,7 @@ func getAndCheckBusObjectFromLabel(udisks2helper udisks2.UDisks2Helper, label st
 }
 
 func (d system) WipeDevice() (bool, *dbus.Error) {
-	fmt.Printf("Wipe device data.\n")
+	logging.Info.Printf("Wipe device data.")
 
 	udisks2helper := udisks2.NewUDisks2(d.conn)
 	dataBusObject, err := getAndCheckBusObjectFromLabel(udisks2helper, labelDataFileSystem)
@@ -66,7 +68,7 @@ func (d system) WipeDevice() (bool, *dbus.Error) {
 	if err != nil {
 		return false, dbus.MakeFailedError(err)
 	}
-	fmt.Printf("Successfully wiped device data.\n")
+	logging.Info.Printf("Successfully wiped device data.")
 
 	return true, nil
 }
@@ -95,7 +97,7 @@ func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
 		return false, dbus.MakeFailedError(err)
 	}
 
-	fmt.Printf("Device will get wiped on next reboot!\n")
+	logging.Info.Printf("Device will get wiped on next reboot!")
 	return true, nil
 }
 
@@ -127,5 +129,5 @@ func InitializeDBus(conn *dbus.Conn) {
 		panic(err)
 	}
 
-	fmt.Printf("Exposing object %s with interface %s ...\n", objectPath, ifaceName)
+	logging.Info.Printf("Exposing object %s with interface %s ...", objectPath, ifaceName)
 }
