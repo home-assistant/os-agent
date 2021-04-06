@@ -1,5 +1,11 @@
 # Agent for Home Assistant OS
 
+## Compile
+
+```
+go build -ldflags "-X main.version="
+```
+
 
 ## Tests
 

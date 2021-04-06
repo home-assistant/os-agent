@@ -14,10 +14,12 @@ import (
 const (
 	busName    = "io.homeassistant.os"
 	objectPath = "/io/homeassistant/os"
-	version    = "dev"
 )
 
+var version string
+
 func main() {
+	logging.Info.Printf("Start OS-Agent v%s", version)
 
 	conn, err := dbus.SystemBus()
 	if err != nil {
