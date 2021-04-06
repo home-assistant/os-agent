@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/home-assistant/os-agent/cgroup"
 	"github.com/home-assistant/os-agent/datadisk"
 	"github.com/home-assistant/os-agent/system"
 
@@ -37,7 +36,6 @@ func main() {
 	fmt.Printf("Listening on service %s ...\n", busName)
 	datadisk.InitializeDBus(conn)
 	system.InitializeDBus(conn)
-	cgroup.InitializeDBus(conn)
 
 	_, err = daemon.SdNotify(false, daemon.SdNotifyReady)
 	if err != nil {
