@@ -92,11 +92,6 @@ func InitializeDBus(conn *dbus.Conn) {
 		conn:        conn,
 	}
 
-	err := conn.Export(d, objectPath, ifaceName)
-	if err != nil {
-		panic(err)
-	}
-
 	propsSpec := map[string]map[string]*prop.Prop{
 		ifaceName: {
 			"CurrentDevice": {
@@ -109,26 +104,30 @@ func InitializeDBus(conn *dbus.Conn) {
 	}
 	props, err := prop.Export(conn, objectPath, propsSpec)
 	if err != nil {
-		panic(err)
+		logging.Critical.Panic(err)
 	}
 
-	node := &introspect.Node{}
-	node.Name = ifaceName
-	iface := &introspect.Interface{}
-
-	iface.Name = ifaceName
-
-	mts := introspect.Methods(d)
-	iface.Methods = mts
-	iface.Properties = props.Introspection(ifaceName)
-
-	node.Interfaces = append(node.Interfaces, *iface)
-
-	dbus_xml_str := introspect.NewIntrospectable(node)
-	err = conn.Export(dbus_xml_str, objectPath,
-		"org.freedesktop.DBus.Introspectable")
+	err = conn.Export(d, objectPath, ifaceName)
 	if err != nil {
-		panic(err)
+		logging.Critical.Panic(err)
+	}
+
+	node := &introspect.Node{
+		Name: objectPath,
+		Interfaces: []introspect.Interface{
+			introspect.IntrospectData,
+			prop.IntrospectData,
+			{
+				Name:       ifaceName,
+				Methods:    introspect.Methods(d),
+				Properties: props.Introspection(ifaceName),
+			},
+		},
+	}
+
+	err = conn.Export(introspect.NewIntrospectable(node), objectPath, "org.freedesktop.DBus.Introspectable")
+	if err != nil {
+		logging.Critical.Panic(err)
 	}
 
 	logging.Info.Printf("Exposing object %s with interface %s ...", objectPath, ifaceName)

@@ -12,6 +12,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
         dbus \
         libglib2.0-bin \
+        apparmor-utils \
     && rm -rf /var/lib/apt/lists/*
 
 
