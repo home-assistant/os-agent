@@ -3,7 +3,9 @@ package cgroup
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
+	securejoin "github.com/cyphar/filepath-securejoin"
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
 	"github.com/godbus/dbus/v5/prop"
@@ -14,7 +16,7 @@ import (
 const (
 	objectPath            = "/io/homeassistant/os/CGroup"
 	ifaceName             = "io.homeassistant.os.CGroup"
-	cgroupFSDockerDevices = "/sys/fs/cgroup/devices/docker/"
+	cgroupFSDockerDevices = "/sys/fs/cgroup/devices/docker"
 )
 
 type cgroup struct {
@@ -22,10 +24,14 @@ type cgroup struct {
 }
 
 func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, *dbus.Error) {
-	allowedFile := cgroupFSDockerDevices + containerID + "/devices.allow"
+	// Make sure path is relative to cgroupFSDockerDevices
+	allowedFile, err := securejoin.SecureJoin(cgroupFSDockerDevices, containerID+string(filepath.Separator)+"devices.allow")
+	if err != nil {
+		return false, dbus.MakeFailedError(fmt.Errorf("Security issues with '%s': %s", containerID, err))
+	}
 
 	// Check if file/container exists
-	_, err := os.Stat(allowedFile)
+	_, err = os.Stat(allowedFile)
 	if os.IsNotExist(err) {
 		return false, dbus.MakeFailedError(fmt.Errorf("Can't find Container '%s' for adjust CGroup devices.", containerID))
 	}
