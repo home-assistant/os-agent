@@ -109,7 +109,7 @@ func InitializeDBus(conn *dbus.Conn) {
 
 	err := conn.Export(d, objectPath, ifaceName)
 	if err != nil {
-		panic(err)
+		logging.Critical.Panic(err)
 	}
 
 	node := &introspect.Node{
