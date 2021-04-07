@@ -21,7 +21,7 @@ type cgroup struct {
 	conn *dbus.Conn
 }
 
-func (d cgroup) UpdateDevicesAllowed(containerID string, permission string) (bool, *dbus.Error) {
+func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, *dbus.Error) {
 	allowedFile := cgroupFSDockerDevices + containerID + "/devices.allow"
 
 	// Check if file/container exists
