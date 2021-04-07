@@ -14,7 +14,7 @@ import (
 const (
 	objectPath            = "/io/homeassistant/os/CGroup"
 	ifaceName             = "io.homeassistant.os.CGroup"
-	CGroupFSDockerDevices = "/sys/fs/cgroup/devices/docker/"
+	cgroupFSDockerDevices = "/sys/fs/cgroup/devices/docker/"
 )
 
 type cgroup struct {
@@ -22,7 +22,7 @@ type cgroup struct {
 }
 
 func (d cgroup) UpdateDevicesAllowed(containerID string, permission string) (bool, *dbus.Error) {
-	allowedFile := CGroupFSDockerDevices + containerID + "/devices.allow"
+	allowedFile := cgroupFSDockerDevices + containerID + "/devices.allow"
 
 	// Check if file/container exists
 	_, err := os.Stat(allowedFile)
