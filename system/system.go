@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	objectPath             = "/io/homeassistant/os/System"
-	ifaceName              = "io.homeassistant.os.System"
+	objectPath             = "/io/hass/os/System"
+	ifaceName              = "io.hass.os.System"
 	labelDataFileSystem    = "hassos-data"
 	labelOverlayFileSystem = "hassos-overlay"
 	kernelCommandLine      = "/mnt/boot/cmdline.txt"

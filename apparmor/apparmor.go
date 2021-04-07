@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	objectPath        = "/io/homeassistant/os/AppArmor"
-	ifaceName         = "io.homeassistant.os.AppArmor"
+	objectPath        = "/io/hass/os/AppArmor"
+	ifaceName         = "io.hass.os.AppArmor"
 	appArmorParserCmd = "apparmor_parser"
 )
 

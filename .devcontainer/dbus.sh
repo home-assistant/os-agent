@@ -20,4 +20,4 @@ function init_dbus() {
 }
 
 init_dbus
-cp contrib/io.homeassistant.conf /etc/dbus-1/system.d/
+cp contrib/io.hass.conf /etc/dbus-1/system.d/

@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	busName    = "io.homeassistant.os"
-	objectPath = "/io/homeassistant/os"
+	busName    = "io.hass.os"
+	objectPath = "/io/hass/os"
 )
 
 var version string
