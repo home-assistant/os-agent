@@ -22,7 +22,10 @@ const (
 	sentryDsn  = "https://c74e811a96e4413a95caaaa5ae05f851@o427061.ingest.sentry.io/5710878"
 )
 
-var version string = "dev"
+var (
+	version       string = "dev"
+	enableCapture bool   = true
+)
 
 func main() {
 	logging.Info.Printf("Start OS-Agent %s", version)
@@ -38,6 +41,7 @@ func main() {
 	}
 
 	defer sentry.Flush(2 * time.Second)
+	defer sentry.Recover()
 
 	// Connect DBus
 	conn, err := dbus.SystemBus()
@@ -78,6 +82,15 @@ func InitializeDBus(conn *dbus.Conn) {
 				Writable: false,
 				Emit:     prop.EmitInvalidates,
 				Callback: nil,
+			},
+			"Telemetry": {
+				Value:    enableCapture,
+				Writable: true,
+				Emit:     prop.EmitInvalidates,
+				Callback: func(c *prop.Change) *dbus.Error {
+					logging.Info.Printf("Telemetry is now %t", c.Value)
+					return nil
+				},
 			},
 		},
 	}
