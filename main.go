@@ -86,7 +86,7 @@ func InitializeDBus(conn *dbus.Conn) {
 			"Telemetry": {
 				Value:    enableCapture,
 				Writable: true,
-				Emit:     prop.EmitInvalidates,
+				Emit:     prop.EmitTrue,
 				Callback: func(c *prop.Change) *dbus.Error {
 					logging.Info.Printf("Telemetry is now %t", c.Value)
 					return nil
