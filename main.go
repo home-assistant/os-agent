@@ -1,40 +1,57 @@
 package main
 
 import (
+	"time"
+
+	"github.com/coreos/go-systemd/v22/daemon"
+	"github.com/getsentry/sentry-go"
+	"github.com/godbus/dbus/v5"
+	"github.com/godbus/dbus/v5/introspect"
+	"github.com/godbus/dbus/v5/prop"
+
 	"github.com/home-assistant/os-agent/apparmor"
 	"github.com/home-assistant/os-agent/cgroup"
 	"github.com/home-assistant/os-agent/datadisk"
 	"github.com/home-assistant/os-agent/system"
 	logging "github.com/home-assistant/os-agent/utils/log"
-
-	"github.com/coreos/go-systemd/v22/daemon"
-	"github.com/godbus/dbus/v5"
-	"github.com/godbus/dbus/v5/introspect"
-	"github.com/godbus/dbus/v5/prop"
 )
 
 const (
 	busName    = "io.hass.os"
 	objectPath = "/io/hass/os"
+	sentryDsn  = "https://c74e811a96e4413a95caaaa5ae05f851@o427061.ingest.sentry.io/5710878"
 )
 
-var version string
+var version string = "dev"
 
 func main() {
-	logging.Info.Printf("Start OS-Agent v%s", version)
+	logging.Info.Printf("Start OS-Agent %s", version)
 
-	conn, err := dbus.SystemBus()
+	// Sentry
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn:        sentryDsn,
+		Release:    version,
+		BeforeSend: filterSentry,
+	})
 	if err != nil {
-		logging.Critical.Panic(err)
+		logging.Critical.Fatalf("Sentry init: %s", err)
 	}
 
-	// Init Dbus
+	defer sentry.Flush(2 * time.Second)
+
+	// Connect DBus
+	conn, err := dbus.SystemBus()
+	if err != nil {
+		logging.Critical.Fatalf("DBus connection: %s", err)
+	}
+
+	// Init Dbus io.hass.os
 	reply, err := conn.RequestName(busName, dbus.NameFlagDoNotQueue)
 	if err != nil {
 		logging.Critical.Panic(err)
 	}
 	if reply != dbus.RequestNameReplyPrimaryOwner {
-		logging.Critical.Panic("name already taken")
+		logging.Critical.Fatalf("name already taken")
 	}
 
 	// Set base Property / functionality
