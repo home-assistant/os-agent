@@ -74,8 +74,8 @@ func (d datadisk) ChangeDevice(newDevice string) (bool, *dbus.Error) {
 }
 
 const (
-	objectPath = "/io/homeassistant/os/DataDisk"
-	ifaceName  = "io.homeassistant.os.DataDisk"
+	objectPath = "/io/hass/os/DataDisk"
+	ifaceName  = "io.hass.os.DataDisk"
 )
 
 func InitializeDBus(conn *dbus.Conn) {

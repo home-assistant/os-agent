@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	objectPath            = "/io/homeassistant/os/CGroup"
-	ifaceName             = "io.homeassistant.os.CGroup"
+	objectPath            = "/io/hass/os/CGroup"
+	ifaceName             = "io.hass.os.CGroup"
 	cgroupFSDockerDevices = "/sys/fs/cgroup/devices/docker"
 )
 

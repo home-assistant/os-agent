@@ -5,6 +5,7 @@ Requires=dbus.socket udisks2.service
 After=dbus.socket
 
 [Service]
+BusName=io.hass.os
 Type=notify
 Restart=always
 RestartSec=5s
