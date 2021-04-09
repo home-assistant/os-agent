@@ -3,13 +3,15 @@ name: build
 on:
   release:
     types: ["published"]
+  pull_request:
+    branches: ["main"]
 
 env:
   GOLANG_VERSION: "1.15"
   BINARY_NAME: "os-agent-debian-amd64.bin"
 
 jobs:
-  build:
+  build_debian:
     name: Build amd64 debian
     runs-on: ubuntu-latest
     container: buildpack-deps:buster
@@ -22,7 +24,7 @@ jobs:
       with:
         go-version: ${{ env.GOLANG_VERSION }}
 
-    - name: Build ${{ matrix.variant.name }}
+    - name: Build binary
       run: go build -ldflags="-s -w" -o "${{ env.BINARY_NAME }}"
 
     - name: Upload release asset
