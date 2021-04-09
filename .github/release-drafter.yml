@@ -1,3 +1,5 @@
+version-resolver:
+  default: minor
 template: |
   ## What's Changed
   
