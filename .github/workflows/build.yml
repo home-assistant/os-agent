@@ -1,0 +1,46 @@
+name: build
+
+on:
+  release:
+    types: ["published"]
+
+env:
+  GOLANG_VERSION: "1.15"
+  BINARY_NAME: "os-agent-debian-amd64.bin"
+
+jobs:
+  build:
+    name: Build amd64 debian
+    runs-on: ubuntu-latest
+    container: buildpack-deps:buster
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v2
+
+    - name: Setup go ${{ env.GOLANG_VERSION }}
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.GOLANG_VERSION }}
+
+    - name: Build ${{ matrix.variant.name }}
+      run: go build -ldflags="-s -w" -o "${{ env.BINARY_NAME }}"
+
+    - name: Upload release asset
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: "${{ github.workspace }}/${{ env.BINARY_NAME }}"
+        asset_name: ${{ env.BINARY_NAME }}
+        asset_content_type: application/x-binary
+
+    - name: Signing asset
+      if: github.event_name == 'release'
+      uses: home-assistant/actions/helpers/codenotary@master
+      with:
+        source: "${{ github.workspace }}/${{ env.BINARY_NAME }}"
+        user: ${{ secrets.VCN_USER }}
+        password: ${{ secrets.VCN_PASSWORD }}
+        organisation: ${{ secrets.VCN_ORG }}
