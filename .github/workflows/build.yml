@@ -25,7 +25,9 @@ jobs:
         go-version: ${{ env.GOLANG_VERSION }}
 
     - name: Build binary
-      run: go build -ldflags="-s -w" -o "${{ env.BINARY_NAME }}"
+      run: |
+        version=$(echo "${{ github.ref }}" | awk -F"/" '{print $NF}')
+        go build -ldflags="-s -w -X main.version=${version}" -o "${{ env.BINARY_NAME }}"
 
     - name: Upload release asset
       if: github.event_name == 'release'
