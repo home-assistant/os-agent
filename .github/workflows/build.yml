@@ -28,7 +28,7 @@ jobs:
       run: |
         version=$(echo "${{ github.ref }}" | awk -F"/" '{print $NF}')
         go build -ldflags="-s -w -X main.version=${version}" -o "${{ env.BINARY_NAME }}"
-        du -hs *
+        du -hs os-agent-debian-amd64.bin
 
     - name: Upload release asset
       if: github.event_name == 'release'
