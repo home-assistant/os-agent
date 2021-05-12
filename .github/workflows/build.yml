@@ -17,7 +17,7 @@ jobs:
     container: buildpack-deps:buster
     steps:
     - name: Checkout the repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v2.3.4
 
     - name: Setup go ${{ env.GOLANG_VERSION }}
       uses: actions/setup-go@v2
