@@ -29,7 +29,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v2.6.1
         if: github.event_name == 'pull_request'
         with:
-          args: build --rm-dist
+          args: build --snapshot --rm-dist
 
       - name: Run GoReleaser release
         uses: goreleaser/goreleaser-action@v2.6.1
