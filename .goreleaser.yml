@@ -28,7 +28,7 @@ archives:
     wrap_in_directory: true
     files:
       - LICENSE
-      - contrib/debian/haos-agent.service
+      - contrib/haos-agent.service
       - contrib/io.hass.conf
 
 checksum:
@@ -48,12 +48,14 @@ nfpms:
     bindir: /usr/bin
     formats:
       - deb
+    dependencies:
+      - udisks2
     replacements:
       386: i386
       amd64: x86_64
       arm64: aarch64
     contents:
-      - src: contrib/debian/haos-agent.service
+      - src: contrib/haos-agent.service
         dst: /usr/lib/systemd/system/haos-agent.service
       - src: contrib/io.hass.conf
         dst: /etc/dbus-1/system.d/io.hass.conf
