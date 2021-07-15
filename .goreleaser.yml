@@ -1,0 +1,67 @@
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+builds:
+  - env:
+      - CGO_ENABLED=0
+    binary: os-agent
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+    goos:
+      - linux
+    goarch:
+      - 386
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - 5
+      - 7
+
+archives:
+  - replacements:
+      386: i386
+      amd64: x86_64
+      arm64: aarch64
+    wrap_in_directory: true
+    files:
+      - LICENSE
+      - contrib/haos-agent.service
+      - contrib/io.hass.conf
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha512
+
+changelog:
+  sort: asc
+
+nfpms:
+  - maintainer: Home Assistant <hello@home-assistant.io>
+    description: Home Assistant OS Agent
+    homepage: https://www.home-assistant.io
+    license: Apache 2.0
+    section: default
+    priority: extra
+    bindir: /usr/bin
+    formats:
+      - deb
+    dependencies:
+      - udisks2
+    replacements:
+      386: i386
+      amd64: x86_64
+      arm64: aarch64
+    contents:
+      - src: contrib/haos-agent.service
+        dst: /usr/lib/systemd/system/haos-agent.service
+      - src: contrib/io.hass.conf
+        dst: /etc/dbus-1/system.d/io.hass.conf
+    scripts:
+      postinstall: contrib/debian/postinstall.sh
+      preremove: contrib/debian/preremove.sh
+      postremove: contrib/debian/postremove.sh
+
+release:
