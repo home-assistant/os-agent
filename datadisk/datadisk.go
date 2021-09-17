@@ -1,8 +1,8 @@
 package datadisk
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/fntlnz/mountinfo"
@@ -19,20 +19,20 @@ const (
 	linuxDataPartitionUUID = "0FC63DAF-8483-4772-8E79-3D69D8477DE4"
 )
 
-func GetDataMount() *mountinfo.Mountinfo {
+func GetDataMount() (*mountinfo.Mountinfo, error) {
 
 	minfo, err := mountinfo.GetMountInfo("/proc/self/mountinfo")
 	if err != nil {
-		log.Fatal(err)
-		return nil
+		logging.Warning.Print(err)
+		return nil, err
 	}
 
 	for _, info := range minfo {
 		if dataMount == info.MountPoint {
-			return &info
+			return &info, nil
 		}
 	}
-	return nil
+	return nil, errors.New("Can't find a data mount!")
 }
 
 type datadisk struct {
@@ -73,6 +73,16 @@ func (d datadisk) ChangeDevice(newDevice string) (bool, *dbus.Error) {
 	return true, nil
 }
 
+func (d datadisk) ReloadDevice() (bool, *dbus.Error) {
+	mountInfo, err := GetDataMount()
+	if err != nil {
+		return false, dbus.MakeFailedError(err)
+	}
+
+	d.currentDisk = mountInfo.MountSource
+	return true, nil
+}
+
 const (
 	objectPath = "/io/hass/os/DataDisk"
 	ifaceName  = "io.hass.os.DataDisk"
@@ -80,10 +90,12 @@ const (
 
 func InitializeDBus(conn *dbus.Conn) {
 
-	/* Since we don't remount data disk at runtime, we can assume the current value remains  */
-	mountInfo := GetDataMount()
+	// Try to read the current data mount point
+	mountInfo, err := GetDataMount()
 	var currentDisk string = ""
-	if mountInfo != nil {
+	if err != nil {
+		logging.Warning.Print(err)
+	} else {
 		currentDisk = mountInfo.MountSource
 	}
 
