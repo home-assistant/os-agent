@@ -1,6 +1,6 @@
 module github.com/home-assistant/os-agent
 
-go 1.15
+go 1.16
 
 require (
 	github.com/coreos/go-systemd/v22 v22.3.2
