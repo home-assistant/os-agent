@@ -36,8 +36,8 @@ func GetDataMount() (*mountinfo.Mountinfo, error) {
 }
 
 type datadisk struct {
-	currentDisk string
-	conn        *dbus.Conn
+	conn  *dbus.Conn
+	props *prop.Properties
 }
 
 func (d datadisk) ChangeDevice(newDevice string) (bool, *dbus.Error) {
@@ -79,7 +79,7 @@ func (d datadisk) ReloadDevice() (bool, *dbus.Error) {
 		return false, dbus.MakeFailedError(err)
 	}
 
-	d.currentDisk = mountInfo.MountSource
+	d.props.SetMust(ifaceName, "CurrentDevice", mountInfo.MountSource)
 	return true, nil
 }
 
@@ -100,14 +100,13 @@ func InitializeDBus(conn *dbus.Conn) {
 	}
 
 	d := datadisk{
-		currentDisk: currentDisk,
-		conn:        conn,
+		conn: conn,
 	}
 
 	propsSpec := map[string]map[string]*prop.Prop{
 		ifaceName: {
 			"CurrentDevice": {
-				Value:    &d.currentDisk,
+				Value:    &currentDisk,
 				Writable: false,
 				Emit:     prop.EmitTrue,
 				Callback: nil,
@@ -118,6 +117,7 @@ func InitializeDBus(conn *dbus.Conn) {
 	if err != nil {
 		logging.Critical.Panic(err)
 	}
+	d.props = props
 
 	err = conn.Export(d, objectPath, ifaceName)
 	if err != nil {
