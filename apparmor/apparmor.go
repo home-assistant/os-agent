@@ -27,7 +27,8 @@ func getAppArmorVersion() string {
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		logging.Critical.Panic(err)
+		logging.Warning.Print(err)
+		return string("")
 	}
 
 	re := regexp.MustCompile("version ([0-9.]*)")
