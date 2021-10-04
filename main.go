@@ -24,7 +24,7 @@ const (
 
 var (
 	version       string = "dev"
-	enableCapture bool   = true
+	enableCapture bool   = false
 )
 
 func main() {
