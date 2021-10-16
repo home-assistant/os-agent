@@ -16,20 +16,25 @@ available.
 
 ### Using Home Assistant Supervised on Debian
 
-Download the latest Debian package from OS Agent GitHub release page at:
+1. Install the required dependancy's using the following command:
 
-<https://github.com/home-assistant/os-agent/releases/latest>
+```bash
+sudo apt install \
+udisks2 \
+libglib2.0-bin -y
+```
 
-Next, install (or update) the downloaded Debian package using:
+2. Download the and install (or update) the Debian package using the following commands:
 
-```shell
+```bash
+wget https://github.com/home-assistant/os-agent/releases/latest/download/os-agent_1.0.0_linux_x86_64.deb
 sudo dpkg -i os-agent_1.0.0_linux_x86_64.deb
 ```
 
-Note: Replace the `deb` file in the above example with the file you
-have downloaded from the releases page.
+Note: Replace the `deb` file in the above example with the latest
+version found on [Releases Page](https://github.com/home-assistant/os-agent/releases/latest/).
 
-You can test if the installation was successful by running:
+3. You can test if the installation was successful by running:
 
 ```bash
 gdbus introspect --system --dest io.hass.os --object-path /io/hass/os
