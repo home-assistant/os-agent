@@ -35,6 +35,8 @@ You can test if the installation was successful by running:
 gdbus introspect --system --dest io.hass.os --object-path /io/hass/os
 ```
 
+You might need to install `libglib2.0-bin` to get the `gdbus` command.
+
 ## Development
 
 ### Compile
