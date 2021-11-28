@@ -35,7 +35,18 @@ You can test if the installation was successful by running:
 gdbus introspect --system --dest io.hass.os --object-path /io/hass/os
 ```
 
+This should **not** return an error. If you get an object introspection
+with `interface` etc. OS Agent is working as expected.
+
 You might need to install `libglib2.0-bin` to get the `gdbus` command.
+
+## Uninstall
+
+To remove OS Agent from your system use the Debian packaging system:
+
+```shell
+sudo dpkg -r os-agent
+```
 
 ## Development
 
