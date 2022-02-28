@@ -26,13 +26,13 @@ jobs:
           go-version: ${{ env.GOLANG_VERSION }}
 
       - name: Run GoReleaser build
-        uses: goreleaser/goreleaser-action@v2.8.1
+        uses: goreleaser/goreleaser-action@v2.9.0
         if: github.event_name == 'pull_request'
         with:
           args: build --snapshot --rm-dist
 
       - name: Run GoReleaser release
-        uses: goreleaser/goreleaser-action@v2.8.1
+        uses: goreleaser/goreleaser-action@v2.9.0
         if: github.event_name == 'release'
         with:
           args: release --rm-dist
