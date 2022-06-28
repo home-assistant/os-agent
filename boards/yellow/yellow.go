@@ -13,9 +13,12 @@ const (
 	ifaceName  = "io.hass.os.Boards.Yellow"
 )
 
-type yellow struct {
-	conn   *dbus.Conn
+var (
 	optLED bool
+)
+
+type yellow struct {
+	conn *dbus.Conn
 }
 
 func getStatusLED() bool {
@@ -26,20 +29,22 @@ func getStatusLED() bool {
 func setStatusLED(c *prop.Change) *dbus.Error {
 	logging.Info.Printf("Set Yellow Status LED to %t", c.Value)
 	// FIXME: set new LED state out of sysfs
-	//optLED = c.Value.(bool)
+	optLED = c.Value.(bool)
 	return nil
 }
 
 func InitializeDBus(conn *dbus.Conn) {
 	d := yellow{
-		conn:   conn,
-		optLED: getStatusLED(),
+		conn: conn,
 	}
+
+	// Init base value
+	optLED = getStatusLED()
 
 	propsSpec := map[string]map[string]*prop.Prop{
 		ifaceName: {
 			"StatusLED": {
-				Value:    d.optLED,
+				Value:    optLED,
 				Writable: true,
 				Emit:     prop.EmitTrue,
 				Callback: setStatusLED,
