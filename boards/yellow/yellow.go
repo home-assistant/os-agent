@@ -24,7 +24,8 @@ var (
 )
 
 type yellow struct {
-	conn *dbus.Conn
+	conn  *dbus.Conn
+	props *prop.Properties
 }
 
 func getStatusLEDPower() bool {
@@ -100,6 +101,7 @@ func InitializeDBus(conn *dbus.Conn) {
 	if err != nil {
 		logging.Critical.Panic(err)
 	}
+	d.props = props
 
 	err = conn.Export(d, objectPath, ifaceName)
 	if err != nil {

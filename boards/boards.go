@@ -17,13 +17,12 @@ const (
 
 type boards struct {
 	conn  *dbus.Conn
-	Board string
+	props *prop.Properties
 }
 
 func InitializeDBus(conn *dbus.Conn, board string) {
 	d := boards{
-		conn:  conn,
-		Board: board,
+		conn: conn,
 	}
 
 	propsSpec := map[string]map[string]*prop.Prop{
@@ -41,6 +40,7 @@ func InitializeDBus(conn *dbus.Conn, board string) {
 	if err != nil {
 		logging.Critical.Panic(err)
 	}
+	d.props = props
 
 	err = conn.Export(d, objectPath, ifaceName)
 	if err != nil {
