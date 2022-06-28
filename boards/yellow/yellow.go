@@ -14,28 +14,32 @@ const (
 )
 
 type yellow struct {
-	conn *dbus.Conn
+	conn   *dbus.Conn
+	optLED bool
 }
 
 func getStatusLED() bool {
+	// FIXME: read current LED state out of sysfs
 	return false
 }
 
 func setStatusLED(c *prop.Change) *dbus.Error {
 	logging.Info.Printf("Set Yellow Status LED to %t", c.Value)
-
+	// FIXME: set new LED state out of sysfs
+	//optLED = c.Value.(bool)
 	return nil
 }
 
 func InitializeDBus(conn *dbus.Conn) {
 	d := yellow{
-		conn: conn,
+		conn:   conn,
+		optLED: getStatusLED(),
 	}
 
 	propsSpec := map[string]map[string]*prop.Prop{
 		ifaceName: {
 			"StatusLED": {
-				Value:    getStatusLED(),
+				Value:    d.optLED,
 				Writable: true,
 				Emit:     prop.EmitTrue,
 				Callback: setStatusLED,
