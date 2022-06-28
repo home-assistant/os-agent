@@ -11,25 +11,55 @@ import (
 const (
 	objectPath = "/io/hass/os/Boards/Yellow"
 	ifaceName  = "io.hass.os.Boards.Yellow"
+
+	ledOff        = "off"
+	ledSupervisor = "supervisor"
+	ledLinux      = "linux"
 )
 
 var (
-	optLED bool
+	optLEDPower     bool
+	optLEDDisk      bool
+	optLEDHeartbeat string
 )
 
 type yellow struct {
 	conn *dbus.Conn
 }
 
-func getStatusLED() bool {
+func getStatusLEDPower() bool {
 	// FIXME: read current LED state out of sysfs
 	return false
 }
 
-func setStatusLED(c *prop.Change) *dbus.Error {
-	logging.Info.Printf("Set Yellow Status LED to %t", c.Value)
+func getStatusLEDDisk() bool {
+	// FIXME: read current LED state out of sysfs
+	return false
+}
+
+func getStatusLEDHeartbeat() string {
+	// FIXME: read current LED state out of sysfs
+	return ledOff
+}
+
+func setStatusLEDPower(c *prop.Change) *dbus.Error {
+	logging.Info.Printf("Set Yellow Power LED to %t", c.Value)
 	// FIXME: set new LED state out of sysfs
-	optLED = c.Value.(bool)
+	optLEDPower = c.Value.(bool)
+	return nil
+}
+
+func setStatusLEDDisk(c *prop.Change) *dbus.Error {
+	logging.Info.Printf("Set Yellow Disk LED to %t", c.Value)
+	// FIXME: set new LED state out of sysfs
+	optLEDDisk = c.Value.(bool)
+	return nil
+}
+
+func setStatusLEDHeartbeat(c *prop.Change) *dbus.Error {
+	logging.Info.Printf("Set Yellow Heartbeat LED to %t", c.Value)
+	// FIXME: set new LED state out of sysfs
+	optLEDHeartbeat = c.Value.(string)
 	return nil
 }
 
@@ -39,15 +69,29 @@ func InitializeDBus(conn *dbus.Conn) {
 	}
 
 	// Init base value
-	optLED = getStatusLED()
+	optLEDPower = getStatusLEDPower()
+	optLEDDisk = getStatusLEDDisk()
+	optLEDHeartbeat = getStatusLEDHeartbeat()
 
 	propsSpec := map[string]map[string]*prop.Prop{
 		ifaceName: {
-			"StatusLED": {
-				Value:    optLED,
+			"PowerLED": {
+				Value:    optLEDPower,
 				Writable: true,
 				Emit:     prop.EmitTrue,
-				Callback: setStatusLED,
+				Callback: setStatusLEDPower,
+			},
+			"DiskLED": {
+				Value:    optLEDDisk,
+				Writable: true,
+				Emit:     prop.EmitTrue,
+				Callback: setStatusLEDDisk,
+			},
+			"HeartbeatLED": {
+				Value:    optLEDHeartbeat,
+				Writable: true,
+				Emit:     prop.EmitTrue,
+				Callback: setStatusLEDHeartbeat,
 			},
 		},
 	}
