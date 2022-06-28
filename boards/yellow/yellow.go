@@ -1,6 +1,8 @@
 package yellow
 
 import (
+	"fmt"
+
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
 	"github.com/godbus/dbus/v5/prop"
@@ -58,6 +60,10 @@ func setStatusLEDDisk(c *prop.Change) *dbus.Error {
 }
 
 func setStatusLEDHeartbeat(c *prop.Change) *dbus.Error {
+	value := c.Value.(string)
+	if value != ledOff && value != ledSupervisor && value != ledLinux {
+		return dbus.MakeFailedError(fmt.Errorf("Invalid LED value: %s", value))
+	}
 	logging.Info.Printf("Set Yellow Heartbeat LED to %t", c.Value)
 	// FIXME: set new LED state out of sysfs
 	optLEDHeartbeat = c.Value.(string)
