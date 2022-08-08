@@ -8,7 +8,7 @@ import (
 	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
-var deviceCgroupRuleRegex = regexp.MustCompile("^([acb]) ([0-9]+|\\*):([0-9]+|\\*) ([rwm]{1,3})$")
+var deviceCgroupRuleRegex = regexp.MustCompile(`^([acb]) ([0-9]+|\*):([0-9]+|\*) ([rwm]{1,3})$`)
 
 // Lifted from Moby's oci/oci.go
 func AppendDevicePermissionsFromCgroupRules(devPermissions []specs.LinuxDeviceCgroup, rules []string) ([]specs.LinuxDeviceCgroup, error) {

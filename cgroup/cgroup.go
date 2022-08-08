@@ -51,6 +51,11 @@ func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, 
 
 		// Pass resources as OCI LinuxResources JSON object
 		stdin, err := cmd.StdinPipe()
+		if err != nil {
+			error := fmt.Errorf("Error calling runc for '%s': %s", containerID, err)
+			logging.Error.Printf("%s", error)
+			return false, dbus.MakeFailedError(error)
+		}
 		enc := json.NewEncoder(stdin)
 		enc.Encode(resources)
 		stdin.Close()
