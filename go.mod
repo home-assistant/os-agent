@@ -9,4 +9,5 @@ require (
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/opencontainers/runtime-spec v1.0.2
 )
