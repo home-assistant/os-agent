@@ -25,8 +25,8 @@ type CGroupVersion int
 
 const (
 	CGroupUnknown CGroupVersion = 0
-	CGroupV1                    = 1
-	CGroupV2                    = 2
+	CGroupV1
+	CGroupV2
 )
 
 type cgroup struct {
