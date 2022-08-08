@@ -21,13 +21,21 @@ const (
 	cgroupFSDockerDevices = "/sys/fs/cgroup/devices/docker"
 )
 
+type CGroupVersion int
+
+const (
+	CGroupUnknown CGroupVersion = 0
+	CGroupV1                    = 1
+	CGroupV2                    = 2
+)
+
 type cgroup struct {
-	conn *dbus.Conn
+	conn          *dbus.Conn
+	cgroupVersion CGroupVersion
 }
 
 func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, *dbus.Error) {
-	// Check for CGroups v2
-	if _, err := os.Stat("/sys/fs/cgroup/cgroup.controllers"); err == nil {
+	if d.cgroupVersion == CGroupV2 {
 		permissions := []string{permission}
 		resources, err := CreateDeviceUpdateResources(permissions)
 		if err != nil {
@@ -88,7 +96,15 @@ func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, 
 
 func InitializeDBus(conn *dbus.Conn) {
 	d := cgroup{
-		conn: conn,
+		conn:          conn,
+		cgroupVersion: CGroupUnknown,
+	}
+
+	// Check for CGroups v2
+	if _, err := os.Stat("/sys/fs/cgroup/cgroup.controllers"); err == nil {
+		d.cgroupVersion = CGroupV2
+	} else {
+		d.cgroupVersion = CGroupV1
 	}
 
 	err := conn.Export(d, objectPath, ifaceName)
