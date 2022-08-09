@@ -39,20 +39,17 @@ func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, 
 		permissions := []string{permission}
 		resources, err := CreateDeviceUpdateResources(permissions)
 		if err != nil {
-			error := fmt.Errorf("Error calling runc for '%s': %s", containerID, err)
+			error := fmt.Errorf("Error creating device resources for '%s': %s", containerID, err)
 			logging.Error.Printf("%s", error)
 			return false, dbus.MakeFailedError(error)
 		}
 
-		fmt.Printf("Container resources update %#v\n", resources)
-
 		cmd := exec.Command("runc", "--root", "/var/run/docker/runtime-runc/moby/", "update", "--resources", "-", containerID)
-		fmt.Printf("Calling command %v", cmd.Args)
 
 		// Pass resources as OCI LinuxResources JSON object
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
-			error := fmt.Errorf("Error calling runc for '%s': %s", containerID, err)
+			error := fmt.Errorf("Error creating stdin pipe for '%s': %s", containerID, err)
 			logging.Error.Printf("%s", error)
 			return false, dbus.MakeFailedError(error)
 		}
@@ -67,7 +64,7 @@ func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, 
 			return false, dbus.MakeFailedError(error)
 		}
 
-		logging.Info.Printf("Permission '%s', granted for Container '%s'", containerID, permission)
+		logging.Info.Printf("Permission '%s', granted for Container '%s' via runc", containerID, permission)
 		return true, nil
 	} else {
 		// Make sure path is relative to cgroupFSDockerDevices
@@ -94,7 +91,7 @@ func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, 
 			return false, dbus.MakeFailedError(fmt.Errorf("Can't write CGroup permission '%s': %s", permission, err))
 		}
 
-		logging.Info.Printf("Permission '%s', granted for Container '%s'", containerID, permission)
+		logging.Info.Printf("Permission '%s', granted for Container '%s' via CGroup devices.allow", containerID, permission)
 		return true, nil
 	}
 }
