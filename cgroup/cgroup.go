@@ -62,6 +62,8 @@ func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, 
 			error := fmt.Errorf("Error calling runc for '%s': %s, output %s", containerID, err, stdoutStderr)
 			logging.Error.Printf("%s", error)
 			return false, dbus.MakeFailedError(error)
+		} else {
+			logging.Info.Printf("Successfully called runc for '%s', output %s", containerID, stdoutStderr)
 		}
 
 		logging.Info.Printf("Permission '%s', granted for Container '%s' via runc", containerID, permission)
