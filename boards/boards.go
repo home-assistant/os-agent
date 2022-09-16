@@ -73,6 +73,6 @@ func InitializeDBus(conn *dbus.Conn, board string) {
 	} else if board == "supervised" {
 		supervised.InitializeDBus(conn)
 	} else {
-		logging.Warning.Printf("Unknown board %s", board)
+		logging.Info.Printf("No specific Board features for %s", board)
 	}
 }
