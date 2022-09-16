@@ -1,28 +1,24 @@
 package yellow
 
 import (
-	"fmt"
-
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
 	"github.com/godbus/dbus/v5/prop"
 
+	"github.com/home-assistant/os-agent/utils/bootfile"
 	logging "github.com/home-assistant/os-agent/utils/log"
 )
 
 const (
 	objectPath = "/io/hass/os/Boards/Yellow"
 	ifaceName  = "io.hass.os.Boards.Yellow"
-
-	ledOff        = "off"
-	ledSupervisor = "supervisor"
-	ledLinux      = "linux"
+	bootConfig = "/mnt/boot/config.txt"
 )
 
 var (
 	optLEDPower     bool
 	optLEDDisk      bool
-	optLEDHeartbeat string
+	optLEDHeartbeat bool
 )
 
 type yellow struct {
@@ -31,24 +27,34 @@ type yellow struct {
 }
 
 func getStatusLEDPower() bool {
-	// FIXME: read current LED state out of sysfs
-	return false
+	value, _ := bootfile.ReadOption(bootConfig, "dtparam=pwr_led_trigger", "on")
+	return value == "on"
 }
 
 func getStatusLEDDisk() bool {
-	// FIXME: read current LED state out of sysfs
-	return false
+	value, _ := bootfile.ReadOption(bootConfig, "dtparam=act_led_trigger", "on")
+	return value == "on"
 }
 
-func getStatusLEDHeartbeat() string {
-	// FIXME: read current LED state out of sysfs
-	return ledOff
+func getStatusLEDHeartbeat() bool {
+	value, _ := bootfile.ReadOption(bootConfig, "dtparam=usr_led_trigger", "on")
+	return value == "on"
 }
 
 func setStatusLEDPower(c *prop.Change) *dbus.Error {
 	logging.Info.Printf("Set Yellow Power LED to %t", c.Value)
-	// FIXME: set new LED state out of sysfs
 	optLEDPower = c.Value.(bool)
+
+	var err error
+	if optLEDPower {
+		err = bootfile.DisableOption(bootConfig, "dtparam=pwr_led_trigger")
+	} else {
+		err = bootfile.SetOption(bootConfig, "dtparam=pwr_led_trigger", "none")
+	}
+
+	if err != nil {
+		return dbus.MakeFailedError(err)
+	}
 	return nil
 }
 
@@ -56,17 +62,35 @@ func setStatusLEDDisk(c *prop.Change) *dbus.Error {
 	logging.Info.Printf("Set Yellow Disk LED to %t", c.Value)
 	// FIXME: set new LED state out of sysfs
 	optLEDDisk = c.Value.(bool)
+
+	var err error
+	if optLEDPower {
+		err = bootfile.DisableOption(bootConfig, "dtparam=act_led_trigger")
+	} else {
+		err = bootfile.SetOption(bootConfig, "dtparam=act_led_trigger", "none")
+	}
+
+	if err != nil {
+		return dbus.MakeFailedError(err)
+	}
 	return nil
 }
 
 func setStatusLEDHeartbeat(c *prop.Change) *dbus.Error {
-	value := c.Value.(string)
-	if value != ledOff && value != ledSupervisor && value != ledLinux {
-		return dbus.MakeFailedError(fmt.Errorf("Invalid LED value: %s", value))
-	}
 	logging.Info.Printf("Set Yellow Heartbeat LED to %t", c.Value)
 	// FIXME: set new LED state out of sysfs
-	optLEDHeartbeat = c.Value.(string)
+	optLEDHeartbeat = c.Value.(bool)
+
+	var err error
+	if optLEDPower {
+		err = bootfile.DisableOption(bootConfig, "dtparam=usr_led_trigger")
+	} else {
+		err = bootfile.SetOption(bootConfig, "dtparam=usr_led_trigger", "none")
+	}
+
+	if err != nil {
+		return dbus.MakeFailedError(err)
+	}
 	return nil
 }
 
