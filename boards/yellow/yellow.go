@@ -27,18 +27,18 @@ type yellow struct {
 }
 
 func getStatusLEDPower() bool {
-	value, _ := bootfile.ReadOption(bootConfig, "dtparam=pwr_led_trigger", "on")
-	return value == "on"
+	value, _ := bootfile.ReadOption(bootConfig, "dtparam=pwr_led_trigger", "default-on")
+	return value != "none"
 }
 
 func getStatusLEDDisk() bool {
-	value, _ := bootfile.ReadOption(bootConfig, "dtparam=act_led_trigger", "on")
-	return value == "on"
+	value, _ := bootfile.ReadOption(bootConfig, "dtparam=act_led_trigger", "activity")
+	return value != "none"
 }
 
 func getStatusLEDHeartbeat() bool {
-	value, _ := bootfile.ReadOption(bootConfig, "dtparam=usr_led_trigger", "on")
-	return value == "on"
+	value, _ := bootfile.ReadOption(bootConfig, "dtparam=usr_led_trigger", "heartbeat")
+	return value != "none"
 }
 
 func setStatusLEDPower(c *prop.Change) *dbus.Error {
