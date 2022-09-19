@@ -10,6 +10,7 @@ import (
 	"github.com/godbus/dbus/v5/prop"
 
 	"github.com/home-assistant/os-agent/apparmor"
+	"github.com/home-assistant/os-agent/boards"
 	"github.com/home-assistant/os-agent/cgroup"
 	"github.com/home-assistant/os-agent/datadisk"
 	"github.com/home-assistant/os-agent/system"
@@ -25,6 +26,7 @@ const (
 var (
 	version       string = "dev"
 	enableCapture bool   = false
+	board         string = "unknown"
 )
 
 func main() {
@@ -66,6 +68,7 @@ func main() {
 	system.InitializeDBus(conn)
 	apparmor.InitializeDBus(conn)
 	cgroup.InitializeDBus(conn)
+	boards.InitializeDBus(conn, board)
 
 	_, err = daemon.SdNotify(false, daemon.SdNotifyReady)
 	if err != nil {
