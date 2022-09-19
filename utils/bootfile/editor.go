@@ -8,11 +8,16 @@ import (
 	logging "github.com/home-assistant/os-agent/utils/log"
 )
 
-func ReadOption(filePath string, optionName string, defaultValue string) (string, error) {
+type Editor struct {
+	FilePath  string
+	Delimiter string
+}
+
+func (e Editor) ReadOption(optionName string, defaultValue string) (string, error) {
 	// Read the options from the boot file
-	file, err := os.Open(filePath)
+	file, err := os.Open(e.FilePath)
 	if err != nil {
-		logging.Error.Printf("Failed to open boot file %s: %s", filePath, err)
+		logging.Error.Printf("Failed to open boot file %s: %s", e.FilePath, err)
 		return defaultValue, err
 	}
 	defer file.Close()
@@ -24,18 +29,18 @@ func ReadOption(filePath string, optionName string, defaultValue string) (string
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
 		if strings.HasPrefix(line, optionName) {
-			return strings.Replace(line, optionName, "", 1), nil
+			return strings.Replace(line, optionName+e.Delimiter, "", 1), nil
 		}
 	}
 
 	return defaultValue, nil
 }
 
-func DisableOption(filePath string, optionName string) error {
+func (e Editor) DisableOption(optionName string) error {
 	// Read the options from the boot file
-	file, err := os.Open(filePath)
+	file, err := os.Open(e.FilePath)
 	if err != nil {
-		logging.Error.Printf("Failed to open boot file %s: %s", filePath, err)
+		logging.Error.Printf("Failed to open boot file %s: %s", e.FilePath, err)
 		return err
 	}
 
@@ -55,9 +60,9 @@ func DisableOption(filePath string, optionName string) error {
 	file.Close()
 
 	// Write all lines back to boot config file
-	file, err = os.Create(filePath)
+	file, err = os.Create(e.FilePath)
 	if err != nil {
-		logging.Error.Printf("Failed to write boot file %s: %s", filePath, err)
+		logging.Error.Printf("Failed to write boot file %s: %s", e.FilePath, err)
 		return err
 	}
 
@@ -71,11 +76,11 @@ func DisableOption(filePath string, optionName string) error {
 	return nil
 }
 
-func SetOption(filePath string, optionName string, value string) error {
+func (e Editor) SetOption(optionName string, value string) error {
 	// Read the options from the boot file
-	file, err := os.Open(filePath)
+	file, err := os.Open(e.FilePath)
 	if err != nil {
-		logging.Error.Printf("Failed to open boot file %s: %s", filePath, err)
+		logging.Error.Printf("Failed to open boot file %s: %s", e.FilePath, err)
 		return err
 	}
 
@@ -89,7 +94,7 @@ func SetOption(filePath string, optionName string, value string) error {
 		line := fileScanner.Text()
 		if strings.HasPrefix(line, optionName) || strings.HasPrefix(line, "#"+optionName) {
 			if !found {
-				outLines = append(outLines, optionName+value)
+				outLines = append(outLines, optionName+e.Delimiter+value)
 				found = true
 			}
 		} else {
@@ -100,13 +105,13 @@ func SetOption(filePath string, optionName string, value string) error {
 
 	// No option found, add it
 	if !found {
-		outLines = append(outLines, optionName+value)
+		outLines = append(outLines, optionName+e.Delimiter+value)
 	}
 
 	// Write all lines back to boot config file
-	file, err = os.Create(filePath)
+	file, err = os.Create(e.FilePath)
 	if err != nil {
-		logging.Error.Printf("Failed to write boot file %s: %s", filePath, err)
+		logging.Error.Printf("Failed to write boot file %s: %s", e.FilePath, err)
 		return err
 	}
 
