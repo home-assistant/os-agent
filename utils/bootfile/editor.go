@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	logging "github.com/home-assistant/os-agent/utils/log"
+
+	"github.com/natefinch/atomic"
 )
 
 type Editor struct {
@@ -43,6 +45,7 @@ func (e Editor) DisableOption(optionName string) error {
 		logging.Error.Printf("Failed to open boot file %s: %s", e.FilePath, err)
 		return err
 	}
+	defer file.Close()
 
 	// Scan over all lines
 	fileScanner := bufio.NewScanner(file)
@@ -57,23 +60,9 @@ func (e Editor) DisableOption(optionName string) error {
 			outLines = append(outLines, line)
 		}
 	}
-	file.Close()
 
 	// Write all lines back to boot config file
-	file, err = os.Create(e.FilePath)
-	if err != nil {
-		logging.Error.Printf("Failed to write boot file %s: %s", e.FilePath, err)
-		return err
-	}
-
-	writter := bufio.NewWriter(file)
-	for _, line := range outLines {
-		writter.WriteString(line + "\n")
-	}
-	writter.Flush()
-	file.Close()
-
-	return nil
+	return e.writeNewBootFile(outLines)
 }
 
 func (e Editor) SetOption(optionName string, value string) error {
@@ -83,6 +72,7 @@ func (e Editor) SetOption(optionName string, value string) error {
 		logging.Error.Printf("Failed to open boot file %s: %s", e.FilePath, err)
 		return err
 	}
+	defer file.Close()
 
 	// Scan over all lines
 	fileScanner := bufio.NewScanner(file)
@@ -101,7 +91,6 @@ func (e Editor) SetOption(optionName string, value string) error {
 			outLines = append(outLines, line)
 		}
 	}
-	file.Close()
 
 	// No option found, add it
 	if !found {
@@ -109,18 +98,18 @@ func (e Editor) SetOption(optionName string, value string) error {
 	}
 
 	// Write all lines back to boot config file
-	file, err = os.Create(e.FilePath)
+	return e.writeNewBootFile(outLines)
+}
+
+func (e Editor) writeNewBootFile(lines []string) error {
+	// Write all lines back to boot config file
+	reader := strings.NewReader(strings.Join(lines, "\n"))
+
+	err := atomic.WriteFile(e.FilePath, reader)
 	if err != nil {
 		logging.Error.Printf("Failed to write boot file %s: %s", e.FilePath, err)
 		return err
 	}
 
-	writter := bufio.NewWriter(file)
-	for _, line := range outLines {
-		writter.WriteString(line + "\n")
-	}
-	writter.Flush()
-	file.Close()
-
-	return nil
+	return err
 }
