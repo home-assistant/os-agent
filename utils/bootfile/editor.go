@@ -45,7 +45,6 @@ func (e Editor) DisableOption(optionName string) error {
 		logging.Error.Printf("Failed to open boot file %s: %s", e.FilePath, err)
 		return err
 	}
-	defer file.Close()
 
 	// Scan over all lines
 	fileScanner := bufio.NewScanner(file)
@@ -60,6 +59,7 @@ func (e Editor) DisableOption(optionName string) error {
 			outLines = append(outLines, line)
 		}
 	}
+	file.Close()
 
 	// Write all lines back to boot config file
 	return e.writeNewBootFile(outLines)
@@ -72,7 +72,6 @@ func (e Editor) SetOption(optionName string, value string) error {
 		logging.Error.Printf("Failed to open boot file %s: %s", e.FilePath, err)
 		return err
 	}
-	defer file.Close()
 
 	// Scan over all lines
 	fileScanner := bufio.NewScanner(file)
@@ -91,6 +90,7 @@ func (e Editor) SetOption(optionName string, value string) error {
 			outLines = append(outLines, line)
 		}
 	}
+	file.Close()
 
 	// No option found, add it
 	if !found {
