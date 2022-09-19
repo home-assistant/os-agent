@@ -19,6 +19,7 @@ var (
 	optLEDPower     bool
 	optLEDDisk      bool
 	optLEDHeartbeat bool
+	bootFile        = bootfile.Editor{FilePath: bootConfig, Delimiter: "="}
 )
 
 type yellow struct {
@@ -27,17 +28,17 @@ type yellow struct {
 }
 
 func getStatusLEDPower() bool {
-	value, _ := bootfile.ReadOption(bootConfig, "dtparam=pwr_led_trigger", "default-on")
+	value, _ := bootFile.ReadOption("dtparam=pwr_led_trigger", "default-on")
 	return value != "none"
 }
 
 func getStatusLEDDisk() bool {
-	value, _ := bootfile.ReadOption(bootConfig, "dtparam=act_led_trigger", "activity")
+	value, _ := bootFile.ReadOption("dtparam=act_led_trigger", "activity")
 	return value != "none"
 }
 
 func getStatusLEDHeartbeat() bool {
-	value, _ := bootfile.ReadOption(bootConfig, "dtparam=usr_led_trigger", "heartbeat")
+	value, _ := bootFile.ReadOption("dtparam=usr_led_trigger", "heartbeat")
 	return value != "none"
 }
 
@@ -47,9 +48,9 @@ func setStatusLEDPower(c *prop.Change) *dbus.Error {
 
 	var err error
 	if optLEDPower {
-		err = bootfile.DisableOption(bootConfig, "dtparam=pwr_led_trigger")
+		err = bootFile.DisableOption("dtparam=pwr_led_trigger")
 	} else {
-		err = bootfile.SetOption(bootConfig, "dtparam=pwr_led_trigger", "none")
+		err = bootFile.SetOption("dtparam=pwr_led_trigger", "none")
 	}
 
 	if err != nil {
@@ -65,9 +66,9 @@ func setStatusLEDDisk(c *prop.Change) *dbus.Error {
 
 	var err error
 	if optLEDPower {
-		err = bootfile.DisableOption(bootConfig, "dtparam=act_led_trigger")
+		err = bootFile.DisableOption("dtparam=act_led_trigger")
 	} else {
-		err = bootfile.SetOption(bootConfig, "dtparam=act_led_trigger", "none")
+		err = bootFile.SetOption("dtparam=act_led_trigger", "none")
 	}
 
 	if err != nil {
@@ -83,9 +84,9 @@ func setStatusLEDHeartbeat(c *prop.Change) *dbus.Error {
 
 	var err error
 	if optLEDPower {
-		err = bootfile.DisableOption(bootConfig, "dtparam=usr_led_trigger")
+		err = bootFile.DisableOption("dtparam=usr_led_trigger")
 	} else {
-		err = bootfile.SetOption(bootConfig, "dtparam=usr_led_trigger", "none")
+		err = bootFile.SetOption("dtparam=usr_led_trigger", "none")
 	}
 
 	if err != nil {
