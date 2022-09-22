@@ -47,7 +47,7 @@ func setStatusLEDPower(c *prop.Change) *dbus.Error {
 	optLEDPower = c.Value.(bool)
 
 	var err error
-	if optLEDPower {
+	if c.Value.(bool) {
 		err = bootFile.DisableOption("dtparam=pwr_led_trigger")
 	} else {
 		err = bootFile.SetOption("dtparam=pwr_led_trigger", "none")
@@ -61,11 +61,10 @@ func setStatusLEDPower(c *prop.Change) *dbus.Error {
 
 func setStatusLEDDisk(c *prop.Change) *dbus.Error {
 	logging.Info.Printf("Set Yellow Disk LED to %t", c.Value)
-	// FIXME: set new LED state out of sysfs
 	optLEDDisk = c.Value.(bool)
 
 	var err error
-	if optLEDPower {
+	if c.Value.(bool) {
 		err = bootFile.DisableOption("dtparam=act_led_trigger")
 	} else {
 		err = bootFile.SetOption("dtparam=act_led_trigger", "none")
@@ -79,11 +78,10 @@ func setStatusLEDDisk(c *prop.Change) *dbus.Error {
 
 func setStatusLEDHeartbeat(c *prop.Change) *dbus.Error {
 	logging.Info.Printf("Set Yellow Heartbeat LED to %t", c.Value)
-	// FIXME: set new LED state out of sysfs
 	optLEDHeartbeat = c.Value.(bool)
 
 	var err error
-	if optLEDPower {
+	if c.Value.(bool) {
 		err = bootFile.DisableOption("dtparam=usr_led_trigger")
 	} else {
 		err = bootFile.SetOption("dtparam=usr_led_trigger", "none")

@@ -94,7 +94,7 @@ func (e Editor) SetOption(optionName string, value string) error {
 
 	// No option found, add it
 	if !found {
-		outLines = append(outLines, optionName+e.Delimiter+value)
+		outLines = append(outLines, optionName+e.Delimiter+value+"\n")
 	}
 
 	// Write all lines back to boot config file

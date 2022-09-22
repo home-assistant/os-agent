@@ -60,4 +60,5 @@ go build -ldflags "-X main.version="
 
 ```shell
 gdbus introspect --system --dest io.hass.os --object-path /io/hass/os
+gdbus call --system --dest io.hass.os --object-path /io/hass/os/Boards/Yellow --method org.freedesktop.DBus.Properties.Set io.hass.os.Boards.Yellow PowerLED "<false>"
 ```
