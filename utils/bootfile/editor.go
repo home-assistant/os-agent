@@ -103,7 +103,11 @@ func (e Editor) SetOption(optionName string, value string) error {
 
 func (e Editor) writeNewBootFile(lines []string) error {
 	// Write all lines back to boot config file
-	reader := strings.NewReader(strings.Join(lines, "\n"))
+	raw := strings.Join(lines, "\n")
+	if !strings.HasSuffix(raw, "\n") {
+		raw += "\n"
+	}
+	reader := strings.NewReader(raw)
 
 	err := atomic.WriteFile(e.FilePath, reader)
 	if err != nil {
