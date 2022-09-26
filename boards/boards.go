@@ -68,9 +68,9 @@ func InitializeDBus(conn *dbus.Conn, board string) {
 	logging.Info.Printf("Exposing object %s with interface %s ...", objectPath, ifaceName)
 
 	// Initialize the board
-	if board == "yellow" {
+	if board == "Yellow" {
 		yellow.InitializeDBus(conn)
-	} else if board == "supervised" {
+	} else if board == "Supervised" {
 		supervised.InitializeDBus(conn)
 	} else {
 		logging.Info.Printf("No specific Board features for %s", board)
