@@ -16,7 +16,7 @@ jobs:
     container: buildpack-deps:buster
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.2.0
+        uses: actions/checkout@v3.3.0
         with:
           fetch-depth: 0 # Needed for changelog generation
 
