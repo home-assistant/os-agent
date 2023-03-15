@@ -3,9 +3,8 @@
 	"build": {
 		"dockerfile": "Dockerfile",
 		"args": {
-			"VARIANT": "1.15",
-			"INSTALL_NODE": "false",
-			"NODE_VERSION": "lts/*"
+			"VARIANT": "1.19-bullseye",
+			"NODE_VERSION": "none"
 		}
 	},
 	"postCreateCommand": "go mod download",
