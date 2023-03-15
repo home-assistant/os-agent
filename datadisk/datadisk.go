@@ -74,9 +74,9 @@ func (d datadisk) ChangeDevice(newDevice string) (bool, *dbus.Error) {
 		return false, dbus.MakeFailedError(err)
 	}
 
-	err = d.MarkDataMove()
-	if err != nil {
-		return false, dbus.MakeFailedError(err)
+	dbuserr := d.MarkDataMove()
+	if dbuserr != nil {
+		return false, dbuserr
 	}
 
 	return true, nil
