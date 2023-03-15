@@ -40,6 +40,21 @@ type datadisk struct {
 	props *prop.Properties
 }
 
+func (d datadisk) MarkDataMove() (bool, *dbus.Error) {
+	/* Move request marker for hassos-data.service */
+	fileName := "/mnt/overlay/move-data"
+	_, err := os.Stat(fileName)
+	if os.IsNotExist(err) {
+		file, err := os.Create(fileName)
+		if err != nil {
+			return false, dbus.MakeFailedError(err)
+		}
+		defer file.Close()
+	}
+
+	return true, nil
+}
+
 func (d datadisk) ChangeDevice(newDevice string) (bool, *dbus.Error) {
 	logging.Info.Printf("Request to change data disk to %s.", newDevice)
 
@@ -59,18 +74,7 @@ func (d datadisk) ChangeDevice(newDevice string) (bool, *dbus.Error) {
 		return false, dbus.MakeFailedError(err)
 	}
 
-	/* Move request marker for hassos-data.service */
-	fileName := "/mnt/overlay/move-data"
-	_, err = os.Stat(fileName)
-	if os.IsNotExist(err) {
-		file, err := os.Create(fileName)
-		if err != nil {
-			return false, dbus.MakeFailedError(err)
-		}
-		defer file.Close()
-	}
-
-	return true, nil
+	return d.MarkDataMove()
 }
 
 func (d datadisk) ReloadDevice() (bool, *dbus.Error) {
