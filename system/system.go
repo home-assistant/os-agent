@@ -22,6 +22,7 @@ const (
 	labelOverlayFileSystem = "hassos-overlay"
 	kernelCommandLine      = "/mnt/boot/cmdline.txt"
 	tmpKernelCommandLine   = "/mnt/boot/.tmp.cmdline.txt"
+	sshAuthKeyFileName     = "/root/.ssh/authorized_keys"
 )
 
 type system struct {
@@ -100,6 +101,35 @@ func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
 
 	logging.Info.Printf("Device will get wiped on next reboot!")
 	return true, nil
+}
+
+func (d system) AddSSHAuthKey(newKey string) *dbus.Error {
+
+	file, err := os.OpenFile(sshAuthKeyFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		logging.Error.Printf("Failed to open SSH authentication file %s: %s", sshAuthKeyFileName, err)
+		return dbus.MakeFailedError(err)
+	}
+
+	defer file.Close()
+
+	if _, err := file.WriteString(newKey + "\n"); err != nil {
+		logging.Error.Printf("Failed to write SSH authentication file: %s.", err)
+		return dbus.MakeFailedError(err)
+	}
+
+	logging.Info.Printf("New SSH authentication key added for user root.")
+
+	return nil
+}
+
+func (d system) ClearSSHAuthKeys() *dbus.Error {
+	if err := os.Remove(sshAuthKeyFileName); err != nil && os.IsNotExist(err) {
+		logging.Error.Printf("Failed to delete SSH authentication file %s: %s", sshAuthKeyFileName, err)
+		return dbus.MakeFailedError(err)
+	}
+
+	return nil
 }
 
 func InitializeDBus(conn *dbus.Conn) {
