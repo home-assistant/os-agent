@@ -71,7 +71,7 @@ func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, 
 			logging.Info.Printf("Successfully called runc for '%s', output %s", containerID, stdoutStderr)
 		}
 
-		logging.Info.Printf("Permission '%s', granted for Container '%s' via runc", containerID, permission)
+		logging.Info.Printf("Permission '%s', granted for Container '%s' via runc", permission, containerID)
 		return true, nil
 	} else {
 		// Make sure path is relative to cgroupFSDockerDevices
@@ -98,7 +98,7 @@ func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, 
 			return false, dbus.MakeFailedError(fmt.Errorf("Can't write CGroup permission '%s': %s", permission, err))
 		}
 
-		logging.Info.Printf("Permission '%s', granted for Container '%s' via CGroup devices.allow", containerID, permission)
+		logging.Info.Printf("Permission '%s', granted for Container '%s' via CGroup devices.allow", permission, containerID)
 		return true, nil
 	}
 }
