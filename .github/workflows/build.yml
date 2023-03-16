@@ -13,7 +13,6 @@ jobs:
   build:
     name: Build OS-Agent
     runs-on: ubuntu-latest
-    container: buildpack-deps:buster
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3.4.0
