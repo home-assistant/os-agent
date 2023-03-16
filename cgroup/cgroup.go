@@ -24,7 +24,7 @@ const (
 type CGroupVersion int
 
 const (
-	CGroupUnknown CGroupVersion = 0
+	CGroupUnknown CGroupVersion = iota
 	CGroupV1
 	CGroupV2
 )
@@ -112,8 +112,10 @@ func InitializeDBus(conn *dbus.Conn) {
 	// Check for CGroups v2
 	if _, err := os.Stat("/sys/fs/cgroup/cgroup.controllers"); err == nil {
 		d.cgroupVersion = CGroupV2
+		logging.Info.Printf("Detected CGroups Version 2")
 	} else {
 		d.cgroupVersion = CGroupV1
+		logging.Info.Printf("Detected CGroups Version 1")
 	}
 
 	err := conn.Export(d, objectPath, ifaceName)
