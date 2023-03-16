@@ -29,12 +29,12 @@ jobs:
         uses: goreleaser/goreleaser-action@v4.2.0
         if: github.event_name == 'pull_request'
         with:
-          args: build --snapshot --rm-dist
+          args: build --snapshot --clean
 
       - name: Run GoReleaser release
         uses: goreleaser/goreleaser-action@v4.2.0
         if: github.event_name == 'release'
         with:
-          args: release --rm-dist
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
