@@ -54,7 +54,12 @@ func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, 
 			return false, dbus.MakeFailedError(error)
 		}
 		enc := json.NewEncoder(stdin)
-		enc.Encode(resources)
+		err = enc.Encode(resources)
+		if err != nil {
+			error := fmt.Errorf("Error encoding JSON for '%s': %s", containerID, err)
+			logging.Error.Printf("%s", error)
+			return false, dbus.MakeFailedError(error)
+		}
 		stdin.Close()
 
 		stdoutStderr, err := cmd.CombinedOutput()
