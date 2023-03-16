@@ -47,7 +47,7 @@ nfpms:
       {{- title .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
-      {{- elsesif eq .Arch "arm64" }}aarch64
+      {{- else if eq .Arch "arm64" }}aarch64
       {{- else }}{{ .Arch }}{{ end }}
     contents:
       - src: contrib/haos-agent.service
