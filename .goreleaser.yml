@@ -43,12 +43,14 @@ nfpms:
     dependencies:
       - udisks2
     file_name_template: >-
-      {{ .ProjectName }}_
-      {{- title .Os }}_
+      {{ .PackageName }}_{{ .Version }}_{{ .Os }}_
       {{- if eq .Arch "amd64" }}x86_64
       {{- else if eq .Arch "386" }}i386
       {{- else if eq .Arch "arm64" }}aarch64
-      {{- else }}{{ .Arch }}{{ end }}
+      {{- else }}
+      {{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}
+      {{ with .Mips }}_{{ . }}{{ end }}
+      {{ end }}
     contents:
       - src: contrib/haos-agent.service
         dst: /usr/lib/systemd/system/haos-agent.service
