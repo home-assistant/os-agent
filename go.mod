@@ -9,5 +9,5 @@ require (
 	github.com/getsentry/sentry-go v0.21.0
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/natefinch/atomic v1.0.1
-	github.com/opencontainers/runtime-spec v1.0.2
+	github.com/opencontainers/runtime-spec v1.1.0
 )
