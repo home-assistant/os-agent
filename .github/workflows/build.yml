@@ -7,7 +7,7 @@ on:
     branches: ["main"]
 
 env:
-  GOLANG_VERSION: "1.16"
+  GOLANG_VERSION: "1.20"
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v3.6.0
         with:
           fetch-depth: 0 # Needed for changelog generation
 
@@ -25,13 +25,13 @@ jobs:
           go-version: ${{ env.GOLANG_VERSION }}
 
       - name: Run GoReleaser build
-        uses: goreleaser/goreleaser-action@v4.3.0
+        uses: goreleaser/goreleaser-action@v4.4.0
         if: github.event_name == 'pull_request'
         with:
           args: build --snapshot --clean
 
       - name: Run GoReleaser release
-        uses: goreleaser/goreleaser-action@v4.3.0
+        uses: goreleaser/goreleaser-action@v4.4.0
         if: github.event_name == 'release'
         with:
           args: release --clean
