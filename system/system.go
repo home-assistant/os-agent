@@ -85,7 +85,7 @@ func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
 	datastr := strings.TrimSpace(string(data))
 	datastr += " haos.wipe=1"
 
-	err = os.WriteFile(tmpKernelCommandLine, []byte(datastr), 0644)
+	err = os.WriteFile(tmpKernelCommandLine, []byte(datastr), 0644) //nolint:gosec
 	if err != nil {
 		fmt.Println(err)
 		return false, dbus.MakeFailedError(err)
