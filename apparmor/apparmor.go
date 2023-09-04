@@ -47,7 +47,7 @@ func (d apparmor) LoadProfile(profilePath string, cachePath string) (bool, *dbus
 	cmd := exec.Command(appArmorParserCmd, "--replace", "--write-cache", "--cache-loc", cachePath, profilePath)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return false, dbus.MakeFailedError(fmt.Errorf("Can't load profile '%s': %s", profilePath, err))
+		return false, dbus.MakeFailedError(fmt.Errorf("Can't load profile '%s': %w", profilePath, err))
 	}
 
 	logging.Info.Printf("Load profile '%s': %s", profilePath, out)
@@ -61,7 +61,7 @@ func (d apparmor) UnloadProfile(profilePath string, cachePath string) (bool, *db
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return false, dbus.MakeFailedError(fmt.Errorf("Can't unload profile '%s': %s", profilePath, err))
+		return false, dbus.MakeFailedError(fmt.Errorf("Can't unload profile '%s': %w", profilePath, err))
 	}
 
 	logging.Info.Printf("Unload profile '%s': %s", profilePath, out)
