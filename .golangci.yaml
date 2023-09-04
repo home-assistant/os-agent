@@ -1,0 +1,7 @@
+linters:
+  presets:
+    - bugs
+  enable:
+    - gosimple
+    - ineffassign
+    - unused
