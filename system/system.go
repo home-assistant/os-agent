@@ -3,7 +3,6 @@ package system
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -77,7 +76,7 @@ func (d system) WipeDevice() (bool, *dbus.Error) {
 
 func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
 
-	data, err := ioutil.ReadFile(kernelCommandLine)
+	data, err := os.ReadFile(kernelCommandLine)
 	if err != nil {
 		fmt.Println(err)
 		return false, dbus.MakeFailedError(err)
@@ -86,7 +85,7 @@ func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
 	datastr := strings.TrimSpace(string(data))
 	datastr += " haos.wipe=1"
 
-	err = ioutil.WriteFile(tmpKernelCommandLine, []byte(datastr), 0644)
+	err = os.WriteFile(tmpKernelCommandLine, []byte(datastr), 0644) //nolint:gosec
 	if err != nil {
 		fmt.Println(err)
 		return false, dbus.MakeFailedError(err)

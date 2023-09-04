@@ -1,5 +1,5 @@
 # [Choice] Go version: 1, 1.15, 1.14
-ARG VARIANT=1-bullseye
+ARG VARIANT=1-bookworm
 FROM mcr.microsoft.com/vscode/devcontainers/go:${VARIANT}
 
 # [Option] Install Node.js
