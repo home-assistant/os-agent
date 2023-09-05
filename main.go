@@ -24,9 +24,10 @@ const (
 )
 
 var (
+	// version and baord are set at link time via -X flag
 	version       string = "dev"
-	enableCapture bool   = false
 	board         string = "unknown"
+	enableCapture bool   = false
 )
 
 func main() {
