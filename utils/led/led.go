@@ -30,7 +30,7 @@ func (led LED) SetTrigger(newState bool) error {
 		newTrigger = []byte("none")
 	}
 
-	err := os.WriteFile(ledTriggerFilePath, newTrigger, 600)
+	err := os.WriteFile(ledTriggerFilePath, newTrigger, 0600)
 	if err != nil {
 		return err
 	}
