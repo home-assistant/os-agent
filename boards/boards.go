@@ -5,6 +5,7 @@ import (
 	"github.com/godbus/dbus/v5/introspect"
 	"github.com/godbus/dbus/v5/prop"
 
+	"github.com/home-assistant/os-agent/boards/green"
 	"github.com/home-assistant/os-agent/boards/supervised"
 	"github.com/home-assistant/os-agent/boards/yellow"
 	logging "github.com/home-assistant/os-agent/utils/log"
@@ -70,6 +71,8 @@ func InitializeDBus(conn *dbus.Conn, board string) {
 	// Initialize the board
 	if board == "Yellow" {
 		yellow.InitializeDBus(conn)
+	} else if board == "Green" {
+		green.InitializeDBus(conn)
 	} else if board == "Supervised" {
 		supervised.InitializeDBus(conn)
 	} else {
