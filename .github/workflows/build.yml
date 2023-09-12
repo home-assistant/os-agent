@@ -25,13 +25,13 @@ jobs:
           go-version: ${{ env.GOLANG_VERSION }}
 
       - name: Run GoReleaser build
-        uses: goreleaser/goreleaser-action@v4.6.0
+        uses: goreleaser/goreleaser-action@v5.0.0
         if: github.event_name == 'pull_request'
         with:
           args: build --snapshot --clean
 
       - name: Run GoReleaser release
-        uses: goreleaser/goreleaser-action@v4.6.0
+        uses: goreleaser/goreleaser-action@v5.0.0
         if: github.event_name == 'release'
         with:
           args: release --clean
