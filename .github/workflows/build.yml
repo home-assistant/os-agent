@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0 # Needed for changelog generation
 
       - name: Setup go ${{ env.GOLANG_VERSION }}
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GOLANG_VERSION }}
 
