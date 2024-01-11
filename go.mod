@@ -6,7 +6,7 @@ require (
 	github.com/coreos/go-systemd/v22 v22.5.0
 	github.com/cyphar/filepath-securejoin v0.2.4
 	github.com/fntlnz/mountinfo v1.0.1
-	github.com/getsentry/sentry-go v0.25.0
+	github.com/getsentry/sentry-go v0.26.0
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/natefinch/atomic v1.0.1
 	github.com/opencontainers/runtime-spec v1.1.0
