@@ -1,0 +1,11 @@
+---
+name: Stale
+
+on:
+  schedule:
+    - cron: "40 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  workflows:
+    uses: home-assistant/actions/.github/workflows/stale.yaml@master
