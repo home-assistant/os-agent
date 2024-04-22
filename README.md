@@ -18,7 +18,7 @@ available.
 
 Download the latest Debian package from OS Agent GitHub release page at:
 
-<https://github.com/wit-ds/os-agent/releases/latest>
+<https://github.com/wit-ds/os-agent/releases/latest> 
 
 Next, install (or update) the downloaded Debian package using:
 
