@@ -17,7 +17,7 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v4.1.2
         with:
-          fetch-depth: 0 # Needed for changelog generation
+          fetch-depth: 0 # Needed for changelog generation 
 
       - name: Setup go ${{ env.GOLANG_VERSION }}
         uses: actions/setup-go@v5
