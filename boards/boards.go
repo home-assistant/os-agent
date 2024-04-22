@@ -5,10 +5,10 @@ import (
 	"github.com/godbus/dbus/v5/introspect"
 	"github.com/godbus/dbus/v5/prop"
 
-	"github.com/home-assistant/os-agent/boards/green"
-	"github.com/home-assistant/os-agent/boards/supervised"
-	"github.com/home-assistant/os-agent/boards/yellow"
-	logging "github.com/home-assistant/os-agent/utils/log"
+	"github.com/wit-ds/os-agent/boards/green"
+	"github.com/wit-ds/os-agent/boards/supervised"
+	"github.com/wit-ds/os-agent/boards/yellow"
+	logging "github.com/wit-ds/os-agent/utils/log"
 )
 
 const (

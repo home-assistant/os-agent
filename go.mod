@@ -1,4 +1,4 @@
-module github.com/home-assistant/os-agent
+module github.com/wit-ds/os-agent
 
 go 1.19
 

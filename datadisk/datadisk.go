@@ -10,8 +10,8 @@ import (
 	"github.com/godbus/dbus/v5/introspect"
 	"github.com/godbus/dbus/v5/prop"
 
-	"github.com/home-assistant/os-agent/udisks2"
-	logging "github.com/home-assistant/os-agent/utils/log"
+	"github.com/wit-ds/os-agent/udisks2"
+	logging "github.com/wit-ds/os-agent/utils/log"
 )
 
 const (

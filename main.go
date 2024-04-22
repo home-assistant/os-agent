@@ -9,12 +9,12 @@ import (
 	"github.com/godbus/dbus/v5/introspect"
 	"github.com/godbus/dbus/v5/prop"
 
-	"github.com/home-assistant/os-agent/apparmor"
-	"github.com/home-assistant/os-agent/boards"
-	"github.com/home-assistant/os-agent/cgroup"
-	"github.com/home-assistant/os-agent/datadisk"
-	"github.com/home-assistant/os-agent/system"
-	logging "github.com/home-assistant/os-agent/utils/log"
+	"github.com/wit-ds/os-agent/apparmor"
+	"github.com/wit-ds/os-agent/boards"
+	"github.com/wit-ds/os-agent/cgroup"
+	"github.com/wit-ds/os-agent/datadisk"
+	"github.com/wit-ds/os-agent/system"
+	logging "github.com/wit-ds/os-agent/utils/log"
 )
 
 const (
