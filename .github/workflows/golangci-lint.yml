@@ -9,7 +9,7 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.6
+      - uses: actions/checkout@v4.1.7
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6.0.1
         with:
