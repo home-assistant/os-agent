@@ -92,11 +92,11 @@ func setTimesyncdConfigProperty(property string, value string) error {
 	// Keep it simple, timesyncd.conf only has the [Time] section
 	params.After = `\[Time\]`
 	if err := configFile.Present(params); err != nil {
-		return fmt.Errorf("failed to set %s: %s", property, err)
+		return fmt.Errorf("failed to set %s: %w", property, err)
 	}
 
 	if err := restartTimesyncd(); err != nil {
-		return fmt.Errorf("failed to restart timesyncd: %s", err)
+		return fmt.Errorf("failed to restart timesyncd: %w", err)
 	}
 
 	return nil
