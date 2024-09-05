@@ -1,6 +1,7 @@
 package main
 
 import (
+	os_time "github.com/home-assistant/os-agent/time"
 	"time"
 
 	"github.com/coreos/go-systemd/v22/daemon"
@@ -70,6 +71,7 @@ func main() {
 	apparmor.InitializeDBus(conn)
 	cgroup.InitializeDBus(conn)
 	boards.InitializeDBus(conn, board)
+	os_time.InitializeDBus(conn)
 
 	_, err = daemon.SdNotify(false, daemon.SdNotifyReady)
 	if err != nil {
