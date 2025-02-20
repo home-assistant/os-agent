@@ -87,7 +87,7 @@ func getTimesyncdConfigProperty(property string) []string {
 }
 
 func setTimesyncdConfigProperty(property string, value string) error {
-	var params = lineinfile.NewPresentParams("NTP=" + value)
+	var params = lineinfile.NewPresentParams(property + "=" + value)
 	params.Regexp, _ = regexp.Compile(`^\s*#?\s*(` + property + `=).*$`)
 	// Keep it simple, timesyncd.conf only has the [Time] section
 	params.After = `\[Time\]`
