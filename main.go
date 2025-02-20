@@ -12,6 +12,7 @@ import (
 	"github.com/home-assistant/os-agent/apparmor"
 	"github.com/home-assistant/os-agent/boards"
 	"github.com/home-assistant/os-agent/cgroup"
+	"github.com/home-assistant/os-agent/config"
 	"github.com/home-assistant/os-agent/datadisk"
 	"github.com/home-assistant/os-agent/system"
 	logging "github.com/home-assistant/os-agent/utils/log"
@@ -70,6 +71,7 @@ func main() {
 	apparmor.InitializeDBus(conn)
 	cgroup.InitializeDBus(conn)
 	boards.InitializeDBus(conn, board)
+	config.InitializeDBus(conn)
 
 	_, err = daemon.SdNotify(false, daemon.SdNotifyReady)
 	if err != nil {
