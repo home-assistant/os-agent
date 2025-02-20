@@ -95,25 +95,6 @@ func setTimesyncdConfigProperty(property string, value string) error {
 		return fmt.Errorf("failed to set %s: %w", property, err)
 	}
 
-	if err := restartTimesyncd(); err != nil {
-		return fmt.Errorf("failed to restart timesyncd: %w", err)
-	}
-
-	return nil
-}
-
-func restartTimesyncd() error {
-	conn, err := dbus.SystemBus()
-	if err != nil {
-		return err
-	}
-
-	obj := conn.Object("org.freedesktop.systemd1", "/org/freedesktop/systemd1")
-	call := obj.Call("org.freedesktop.systemd1.Manager.RestartUnit", 0, "systemd-timesyncd.service", "replace")
-	if call.Err != nil {
-		return call.Err
-	}
-
 	return nil
 }
 
