@@ -1,4 +1,4 @@
-package time
+package config
 
 import (
 	"fmt"
@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	objectPath    = "/io/hass/os/Time/Timesyncd"
-	ifaceName     = "io.hass.os.Time.Timesyncd"
+	objectPath    = "/io/hass/os/Config/Timesyncd"
+	ifaceName     = "io.hass.os.Config.Timesyncd"
 	timesyncdConf = "/etc/systemd/timesyncd.conf"
 )
 

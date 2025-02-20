@@ -1,7 +1,6 @@
 package main
 
 import (
-	os_time "github.com/home-assistant/os-agent/time"
 	"time"
 
 	"github.com/coreos/go-systemd/v22/daemon"
@@ -13,6 +12,7 @@ import (
 	"github.com/home-assistant/os-agent/apparmor"
 	"github.com/home-assistant/os-agent/boards"
 	"github.com/home-assistant/os-agent/cgroup"
+	"github.com/home-assistant/os-agent/config"
 	"github.com/home-assistant/os-agent/datadisk"
 	"github.com/home-assistant/os-agent/system"
 	logging "github.com/home-assistant/os-agent/utils/log"
@@ -71,7 +71,7 @@ func main() {
 	apparmor.InitializeDBus(conn)
 	cgroup.InitializeDBus(conn)
 	boards.InitializeDBus(conn, board)
-	os_time.InitializeDBus(conn)
+	config.InitializeDBus(conn)
 
 	_, err = daemon.SdNotify(false, daemon.SdNotifyReady)
 	if err != nil {
