@@ -108,6 +108,11 @@ func processPresent(inLines []string, params Params) ([]string, error) {
 		return nil, err
 	}
 
+	if params.Regexp == nil {
+		err := fmt.Errorf("parameter Regexp must be set")
+		return nil, err
+	}
+
 	needsBefore := params.Before != ""
 	needsAfter := params.After != "EOF"
 	afterRegexp, _ := re.Compile(params.After)
@@ -154,6 +159,11 @@ func processAbsent(inLines []string, params Params) ([]string, error) {
 
 	if params.Before != "EOF" && params.After != "" {
 		err := fmt.Errorf("cannot specify both Before and After")
+		return nil, err
+	}
+
+	if params.Regexp == nil {
+		err := fmt.Errorf("parameter Regexp must be set")
 		return nil, err
 	}
 

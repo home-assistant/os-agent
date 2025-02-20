@@ -130,6 +130,16 @@ func TestPresentAppendedEOF(t *testing.T) {
 	}
 }
 
+func TestPresentNoRegexp(t *testing.T) {
+	params := NewPresentParams("NTP=ntp.example.com")
+	params.After = `\[Time\]`
+	lines := strings.Split(contentNTPSet, "\n")
+	_, err := processPresent(lines, params)
+	if err == nil {
+		t.Errorf("Expected an error, got nil")
+	}
+}
+
 func TestAbsent(t *testing.T) {
 	params := NewAbsentParams()
 	params.Regexp, _ = regexp.Compile(`^\s*(NTP=).*$`)
@@ -157,5 +167,15 @@ func TestAbsentNotAfter(t *testing.T) {
 	expected := contentNTPNotAfter
 	if result != expected {
 		t.Errorf("Expected %s, got %s", expected, result)
+	}
+}
+
+func TestAbsentNoRegexp(t *testing.T) {
+	params := NewAbsentParams()
+	params.After = `\[Time\]`
+	lines := strings.Split(contentNTPSet, "\n")
+	_, err := processAbsent(lines, params)
+	if err == nil {
+		t.Errorf("Expected an error, got nil")
 	}
 }
