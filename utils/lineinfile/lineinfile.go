@@ -200,7 +200,7 @@ func (l LineInFile) Find(regexp string, after string, allowMissing bool) (*strin
 
 	content, err := os.ReadFile(l.FilePath)
 	if err != nil {
-		fmt.Print(err)
+		logging.Error.Printf("Error reading %s: %s", l.FilePath, err)
 		return nil, err
 	}
 
