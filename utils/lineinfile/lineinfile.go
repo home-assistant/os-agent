@@ -47,16 +47,23 @@ func NewAbsentParams() Params {
 }
 
 func (l LineInFile) Present(params Params) error {
-	if _, err := os.Stat(l.FilePath); err != nil {
+	createFile := false
+	if _, err := os.Stat(l.FilePath); os.IsNotExist(err) {
+		// will be created by atomic.WriteFile
+		createFile = true
+	} else if err != nil {
 		return err
 	}
 
-	content, err := os.ReadFile(l.FilePath)
-	if err != nil {
-		return err
-	}
+	var lines []string
+	if !createFile {
+		content, err := os.ReadFile(l.FilePath)
+		if err != nil {
+			return err
+		}
 
-	lines := strings.Split(string(content), "\n")
+		lines = strings.Split(string(content), "\n")
+	}
 
 	outLines, err := processPresent(lines, params)
 	if err != nil {
@@ -132,7 +139,7 @@ func processPresent(inLines []string, params Params) ([]string, error) {
 			afterIndex = idx
 			continue
 		}
-		if (needsAfter && afterIndex >= 0 || needsBefore && beforeIndex >= 0) && foundIndex < 0 && params.Regexp.MatchString(curr) {
+		if ((!needsAfter && !needsBefore) || needsAfter && afterIndex >= 0 || needsBefore && beforeIndex >= 0) && foundIndex < 0 && params.Regexp.MatchString(curr) {
 			foundIndex = idx
 		}
 	}
@@ -186,7 +193,7 @@ func processAbsent(inLines []string, params Params) ([]string, error) {
 			afterIndex = idx
 			continue
 		}
-		if (needsAfter && afterIndex >= 0 || needsBefore && beforeIndex >= 0) && foundIndex < 0 && params.Regexp.MatchString(curr) {
+		if ((!needsAfter && !needsBefore) || needsAfter && afterIndex >= 0 || needsBefore && beforeIndex >= 0) && foundIndex < 0 && params.Regexp.MatchString(curr) {
 			foundIndex = idx
 		}
 	}
@@ -227,7 +234,7 @@ func processFind(regexp string, after string, inLines []string) *string {
 	lineRegexp, _ := re.Compile(regexp)
 	afterRegexp, _ := re.Compile(after)
 
-	var foundAfter = false
+	var foundAfter = after == ""
 
 	for _, curr := range inLines {
 		if !foundAfter && afterRegexp.MatchString(curr) {
