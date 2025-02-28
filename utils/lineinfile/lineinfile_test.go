@@ -61,6 +61,16 @@ func TestFindMissingNotAfter(t *testing.T) {
 	}
 }
 
+func TestFindEmptyAfter(t *testing.T) {
+	content := "KEY=value\nKEY2=value2"
+	lines := strings.Split(content, "\n")
+	result := processFind(`^KEY=`, "", lines)
+	if *result != "KEY=value" {
+		t.Errorf("Expected a result, got nil")
+		return
+	}
+}
+
 func TestPresentSimple(t *testing.T) {
 	params := NewPresentParams("NTP=ntp2.example.com")
 	params.Regexp, _ = regexp.Compile(`^\s*#?\s*(NTP=).*$`)
@@ -130,6 +140,31 @@ func TestPresentAppendedEOF(t *testing.T) {
 	}
 }
 
+func TestPresentEmptyContent(t *testing.T) {
+	params := NewPresentParams("NTP=ntp.example.com")
+	params.Regexp, _ = regexp.Compile(`^\s*#?\s*(NTP=).*$`)
+	params.After = `EOF`
+	var lines []string
+	processed, _ := processPresent(lines, params)
+	result := strings.Join(processed, "\n")
+	expected := "NTP=ntp.example.com"
+	if result != expected {
+		t.Errorf("Expected %s, got %s", expected, result)
+	}
+}
+
+func TestPresentNoBeforeAfterRegex(t *testing.T) {
+	params := NewPresentParams("NTP=ntp.example.com")
+	params.Regexp, _ = regexp.Compile(`^\s*#?\s*(NTP=).*$`)
+	content := "NTP=ntp.example.com"
+	lines := strings.Split(content, "\n")
+	processed, _ := processPresent(lines, params)
+	result := strings.Join(processed, "\n")
+	if result != content {
+		t.Errorf("Expected %s, got %s", content, result)
+	}
+}
+
 func TestPresentNoRegexp(t *testing.T) {
 	params := NewPresentParams("NTP=ntp.example.com")
 	params.After = `\[Time\]`
@@ -177,5 +212,18 @@ func TestAbsentNoRegexp(t *testing.T) {
 	_, err := processAbsent(lines, params)
 	if err == nil {
 		t.Errorf("Expected an error, got nil")
+	}
+}
+
+func TestAbsentNoBeforeAfterRegex(t *testing.T) {
+	params := NewAbsentParams()
+	params.Regexp, _ = regexp.Compile(`^\s*#?\s*(NTP=).*$`)
+	content := "NTP=ntp.example.com"
+	lines := strings.Split(content, "\n")
+	processed, _ := processAbsent(lines, params)
+	result := strings.Join(processed, "\n")
+	expected := ""
+	if result != expected {
+		t.Errorf("Expected %s, got %s", expected, result)
 	}
 }
