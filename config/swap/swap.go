@@ -7,16 +7,17 @@ import (
 	"github.com/godbus/dbus/v5/prop"
 	"github.com/home-assistant/os-agent/utils/lineinfile"
 	logging "github.com/home-assistant/os-agent/utils/log"
+	"os"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 const (
-	objectPath        = "/io/hass/os/Config/Swap"
-	ifaceName         = "io.hass.os.Config.Swap"
-	swapPath          = "/etc/default/haos-swapfile"
-	swappinessPath    = "/etc/sysctl.d/15-swappiness.conf"
-	defaultSwappiness = 1
+	objectPath     = "/io/hass/os/Config/Swap"
+	ifaceName      = "io.hass.os.Config.Swap"
+	swapPath       = "/etc/default/haos-swapfile"
+	swappinessPath = "/etc/sysctl.d/15-swappiness.conf"
 )
 
 var (
@@ -29,6 +30,24 @@ var (
 type swap struct {
 	conn  *dbus.Conn
 	props *prop.Properties
+}
+
+// Read swappiness from kernel procfs. If it fails, log errors and return 60
+// as it's usual kernel default.
+func readKernelSwappiness() int {
+	content, err := os.ReadFile("/proc/sys/vm/swappiness")
+	if err != nil {
+		logging.Error.Printf("Failed to read kernel swappiness: %s", err)
+		return 60
+	}
+
+	swappiness, err := strconv.Atoi(strings.TrimSpace(string(content)))
+	if err != nil {
+		logging.Error.Printf("Failed to parse kernel swappiness: %s", err)
+		return 60
+	}
+
+	return swappiness
 }
 
 func getSwapSize() string {
@@ -48,7 +67,7 @@ func getSwapSize() string {
 func getSwappiness() int {
 	found, err := swappinessEditor.Find(`^vm.swappiness\s*=`, "", true)
 	if found == nil || err != nil {
-		return defaultSwappiness
+		return readKernelSwappiness()
 	}
 
 	matches := regexp.MustCompile(`^vm.swappiness\s*=\s*(\d+)`).FindStringSubmatch(*found)
@@ -58,7 +77,7 @@ func getSwappiness() int {
 		}
 	}
 
-	return defaultSwappiness
+	return readKernelSwappiness()
 }
 
 func setSwapSize(c *prop.Change) *dbus.Error {
