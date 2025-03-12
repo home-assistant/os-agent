@@ -1,7 +1,6 @@
 package system
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -10,7 +9,6 @@ import (
 	"github.com/godbus/dbus/v5/introspect"
 	"github.com/godbus/dbus/v5/prop"
 
-	"github.com/home-assistant/os-agent/udisks2"
 	logging "github.com/home-assistant/os-agent/utils/log"
 )
 
@@ -26,52 +24,6 @@ const (
 
 type system struct {
 	conn *dbus.Conn
-}
-
-func getAndCheckBusObjectFromLabel(udisks2helper udisks2.UDisks2Helper, label string) (dbus.BusObject, error) {
-	dataBusObject, err := udisks2helper.GetBusObjectFromLabel(label)
-	if err != nil {
-		return nil, dbus.MakeFailedError(err)
-	}
-
-	dataFilesystem := udisks2.NewFilesystem(dataBusObject)
-	dataMountPoints, err := dataFilesystem.GetMountPointsString(context.Background())
-	if err != nil {
-		return nil, dbus.MakeFailedError(err)
-	}
-
-	if len(dataMountPoints) > 0 {
-		return nil, dbus.MakeFailedError(fmt.Errorf("Device with label \"%s\" is mounted at %s, aborting.", label, dataMountPoints))
-	}
-
-	return dataBusObject, nil
-}
-
-func (d system) WipeDevice() (bool, *dbus.Error) {
-	logging.Info.Printf("Wipe device data.")
-
-	udisks2helper := udisks2.NewUDisks2(d.conn)
-	dataBusObject, err := getAndCheckBusObjectFromLabel(udisks2helper, labelDataFileSystem)
-	if err != nil {
-		return false, dbus.MakeFailedError(err)
-	}
-
-	overlayBusObject, err := getAndCheckBusObjectFromLabel(udisks2helper, labelOverlayFileSystem)
-	if err != nil {
-		return false, dbus.MakeFailedError(err)
-	}
-
-	err = udisks2helper.FormatPartition(dataBusObject, "ext4", labelDataFileSystem)
-	if err != nil {
-		return false, dbus.MakeFailedError(err)
-	}
-	err = udisks2helper.FormatPartition(overlayBusObject, "ext4", labelOverlayFileSystem)
-	if err != nil {
-		return false, dbus.MakeFailedError(err)
-	}
-	logging.Info.Printf("Successfully wiped device data.")
-
-	return true, nil
 }
 
 func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
