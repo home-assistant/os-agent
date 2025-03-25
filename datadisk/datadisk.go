@@ -32,7 +32,7 @@ func GetDataMount() (*mountinfo.Mountinfo, error) {
 			return &info, nil
 		}
 	}
-	return nil, errors.New("Can't find a data mount!")
+	return nil, errors.New("can't find a data mount")
 }
 
 type datadisk struct {
@@ -66,7 +66,7 @@ func (d datadisk) ChangeDevice(newDevice string) (bool, *dbus.Error) {
 
 	logging.Info.Printf("Data partition is currently on device %s.", *dataDevice)
 	if *dataDevice == newDevice {
-		return false, dbus.MakeFailedError(fmt.Errorf("Current data device \"%s\" the same as target device. Aborting.", *dataDevice))
+		return false, dbus.MakeFailedError(fmt.Errorf("current data device \"%s\" the same as target device", *dataDevice))
 	}
 
 	err = udisks2helper.PartitionDeviceWithSinglePartition(newDevice, linuxDataPartitionUUID, "hassos-data-external")
@@ -101,7 +101,7 @@ func InitializeDBus(conn *dbus.Conn) {
 
 	// Try to read the current data mount point
 	mountInfo, err := GetDataMount()
-	var currentDisk string = ""
+	var currentDisk = ""
 	if err != nil {
 		logging.Warning.Print(err)
 	} else {

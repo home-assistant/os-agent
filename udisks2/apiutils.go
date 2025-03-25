@@ -44,7 +44,7 @@ func (m *Manager) ResolveDeviceFromLabel(label string) (*dbus.ObjectPath, error)
 		return nil, err
 	}
 	if len(blockObjects) != 1 {
-		return nil, fmt.Errorf("Expected single block device with file system label \"%s\", found %d", label, len(blockObjects))
+		return nil, fmt.Errorf("expected single block device with file system label \"%s\", found %d", label, len(blockObjects))
 	}
 
 	/* Get Partition object of the data partition */
