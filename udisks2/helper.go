@@ -75,7 +75,7 @@ func (u UDisks2Helper) FormatPartitionFromDevicePath(devicePath string, fsType s
 		return err
 	}
 	if len(blockObjects) != 1 {
-		return fmt.Errorf("Expected single block device with device path \"%s\", found %d", devicePath, len(blockObjects))
+		return fmt.Errorf("expected single block device with device path \"%s\", found %d", devicePath, len(blockObjects))
 	}
 
 	logging.Info.Printf("Formatting block device %s with file system \"%s\".", devicePath, fsType)
@@ -99,7 +99,7 @@ func (u UDisks2Helper) PartitionDeviceWithSinglePartition(devicePath string, uui
 		return err
 	}
 	if len(blockObjects) != 1 {
-		return fmt.Errorf("Expected single block device with device path \"%s\", found %d", devicePath, len(blockObjects))
+		return fmt.Errorf("expected single block device with device path \"%s\", found %d", devicePath, len(blockObjects))
 	}
 
 	blockObjectPath := blockObjects[0]

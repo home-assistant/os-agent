@@ -78,7 +78,7 @@ func (e Editor) SetOption(optionName string, value string) error {
 	fileScanner.Split(bufio.ScanLines)
 
 	var outLines []string
-	var found bool = false
+	var found = false
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
 		if strings.HasPrefix(line, optionName) || strings.HasPrefix(line, "#"+optionName) {

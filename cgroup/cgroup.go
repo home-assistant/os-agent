@@ -39,7 +39,7 @@ func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, 
 		permissions := []string{permission}
 		resources, err := CreateDeviceUpdateResources(permissions)
 		if err != nil {
-			error := fmt.Errorf("Error creating device resources for '%s': %w", containerID, err)
+			error := fmt.Errorf("creating device resources for '%s' failed: %w", containerID, err)
 			logging.Error.Printf("%s", error)
 			return false, dbus.MakeFailedError(error)
 		}
@@ -49,14 +49,14 @@ func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, 
 		// Pass resources as OCI LinuxResources JSON object
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
-			error := fmt.Errorf("Error creating stdin pipe for '%s': %w", containerID, err)
+			error := fmt.Errorf("creating stdin pipe for '%s' failed: %w", containerID, err)
 			logging.Error.Printf("%s", error)
 			return false, dbus.MakeFailedError(error)
 		}
 		enc := json.NewEncoder(stdin)
 		err = enc.Encode(resources)
 		if err != nil {
-			error := fmt.Errorf("Error encoding JSON for '%s': %w", containerID, err)
+			error := fmt.Errorf("encoding JSON for '%s' failed: %w", containerID, err)
 			logging.Error.Printf("%s", error)
 			return false, dbus.MakeFailedError(error)
 		}
@@ -64,7 +64,7 @@ func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, 
 
 		stdoutStderr, err := cmd.CombinedOutput()
 		if err != nil {
-			error := fmt.Errorf("Error calling runc for '%s': %w, output %s", containerID, err, stdoutStderr)
+			error := fmt.Errorf("calling runc for '%s' failed: %w, output %s", containerID, err, stdoutStderr)
 			logging.Error.Printf("%s", error)
 			return false, dbus.MakeFailedError(error)
 		} else {
@@ -77,25 +77,25 @@ func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, 
 		// Make sure path is relative to cgroupFSDockerDevices
 		allowedFile, err := securejoin.SecureJoin(cgroupFSDockerDevices, containerID+string(filepath.Separator)+"devices.allow")
 		if err != nil {
-			return false, dbus.MakeFailedError(fmt.Errorf("Security issues with '%s': %w", containerID, err))
+			return false, dbus.MakeFailedError(fmt.Errorf("security issues with '%s': %w", containerID, err))
 		}
 
 		// Check if file/container exists
 		_, err = os.Stat(allowedFile)
 		if os.IsNotExist(err) {
-			return false, dbus.MakeFailedError(fmt.Errorf("Can't find Container '%s' for adjust CGroup devices.", containerID))
+			return false, dbus.MakeFailedError(fmt.Errorf("can't find Container '%s' for adjust CGroup devices", containerID))
 		}
 
 		// Write permission adjustments
 		file, err := os.Create(allowedFile)
 		if err != nil {
-			return false, dbus.MakeFailedError(fmt.Errorf("Can't open CGroup devices '%s': %w", allowedFile, err))
+			return false, dbus.MakeFailedError(fmt.Errorf("can't open CGroup devices '%s': %w", allowedFile, err))
 		}
 		defer file.Close()
 
 		_, err = file.WriteString(permission + "\n")
 		if err != nil {
-			return false, dbus.MakeFailedError(fmt.Errorf("Can't write CGroup permission '%s': %w", permission, err))
+			return false, dbus.MakeFailedError(fmt.Errorf("can't write CGroup permission '%s': %w", permission, err))
 		}
 
 		logging.Info.Printf("Permission '%s', granted for Container '%s' via CGroup devices.allow", permission, containerID)
