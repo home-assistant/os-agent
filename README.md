@@ -32,13 +32,11 @@ have downloaded from the releases page.
 You can test if the installation was successful by running:
 
 ```bash
-gdbus introspect --system --dest io.hass.os --object-path /io/hass/os
+busctl introspect --system io.hass.os /io/hass/os
 ```
 
 This should **not** return an error. If you get an object introspection
-with `interface` etc. OS Agent is working as expected.
-
-You might need to install `libglib2.0-bin` to get the `gdbus` command.
+with `io.hass.os`, `interface` etc. OS Agent is working as expected.
 
 ## Uninstall
 
