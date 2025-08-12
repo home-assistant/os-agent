@@ -1,9 +1,11 @@
 package apparmor
 
 import (
+	"context"
 	"fmt"
 	"os/exec"
 	"regexp"
+	"time"
 
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
@@ -24,7 +26,9 @@ type apparmor struct {
 }
 
 func getAppArmorVersion() string {
-	cmd := exec.Command(appArmorParserCmd, "--version")
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, appArmorParserCmd, "--version")
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -44,7 +48,9 @@ func getAppArmorVersion() string {
 func (d apparmor) LoadProfile(profilePath string, cachePath string) (bool, *dbus.Error) {
 	logging.Info.Printf("Load AppArmor profile '%s'.", profilePath)
 
-	cmd := exec.Command(appArmorParserCmd, "--replace", "--write-cache", "--cache-loc", cachePath, profilePath)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, appArmorParserCmd, "--replace", "--write-cache", "--cache-loc", cachePath, profilePath)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return false, dbus.MakeFailedError(fmt.Errorf("can't load profile '%s': %w", profilePath, err))
@@ -57,7 +63,9 @@ func (d apparmor) LoadProfile(profilePath string, cachePath string) (bool, *dbus
 func (d apparmor) UnloadProfile(profilePath string, cachePath string) (bool, *dbus.Error) {
 	logging.Info.Printf("Unload AppArmor profile '%s'.", profilePath)
 
-	cmd := exec.Command(appArmorParserCmd, "--remove", "--write-cache", "--cache-loc", cachePath, profilePath)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, appArmorParserCmd, "--remove", "--write-cache", "--cache-loc", cachePath, profilePath)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
