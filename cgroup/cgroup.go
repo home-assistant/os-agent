@@ -1,11 +1,13 @@
 package cgroup
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	securejoin "github.com/cyphar/filepath-securejoin"
 	"github.com/godbus/dbus/v5"
@@ -44,7 +46,9 @@ func (d cgroup) AddDevicesAllowed(containerID string, permission string) (bool, 
 			return false, dbus.MakeFailedError(error)
 		}
 
-		cmd := exec.Command("runc", "--root", "/var/run/docker/runtime-runc/moby/", "update", "--resources", "-", containerID)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		cmd := exec.CommandContext(ctx, "runc", "--root", "/var/run/docker/runtime-runc/moby/", "update", "--resources", "-", containerID)
 
 		// Pass resources as OCI LinuxResources JSON object
 		stdin, err := cmd.StdinPipe()
