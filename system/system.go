@@ -13,17 +13,19 @@ import (
 )
 
 const (
-	objectPath             = "/io/hass/os/System"
-	ifaceName              = "io.hass.os.System"
-	labelDataFileSystem    = "hassos-data"
-	labelOverlayFileSystem = "hassos-overlay"
-	kernelCommandLine      = "/mnt/boot/cmdline.txt"
-	tmpKernelCommandLine   = "/mnt/boot/.tmp.cmdline.txt"
-	sshAuthKeyFileName     = "/root/.ssh/authorized_keys"
+	objectPath                = "/io/hass/os/System"
+	ifaceName                 = "io.hass.os.System"
+	labelDataFileSystem       = "hassos-data"
+	labelOverlayFileSystem    = "hassos-overlay"
+	kernelCommandLine         = "/mnt/boot/cmdline.txt"
+	tmpKernelCommandLine      = "/mnt/boot/.tmp.cmdline.txt"
+	sshAuthKeyFileName        = "/root/.ssh/authorized_keys"
+	containerdSnapshotterFlag = "/mnt/data/.docker-use-containerd-snapshotter"
 )
 
 type system struct {
-	conn *dbus.Conn
+	conn  *dbus.Conn
+	props *prop.Properties
 }
 
 func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
@@ -83,12 +85,69 @@ func (d system) ClearSSHAuthKeys() *dbus.Error {
 	return nil
 }
 
+func isContainerdSnapshotterEnabled() bool {
+	_, err := os.Stat(containerdSnapshotterFlag)
+	return err == nil
+}
+
+func setContainerdSnapshotterEnabled(c *prop.Change) *dbus.Error {
+	enabled, ok := c.Value.(bool)
+	if !ok {
+		return dbus.MakeFailedError(fmt.Errorf("invalid type for ContainerdSnapshotterEnabled"))
+	}
+
+	if enabled {
+		// Create the flag file if it doesn't exist
+		_, err := os.Stat(containerdSnapshotterFlag)
+		if os.IsNotExist(err) {
+			f, err := os.Create(containerdSnapshotterFlag)
+			if err != nil {
+				logging.Error.Printf("Failed to create containerd snapshotter flag: %s", err)
+				return dbus.MakeFailedError(err)
+			}
+			defer f.Close()
+			logging.Info.Printf("Containerd snapshotter flag created")
+		} else if err != nil {
+			logging.Error.Printf("Failed to check containerd snapshotter flag: %s", err)
+			return dbus.MakeFailedError(err)
+		}
+	} else {
+		// Remove the flag file
+		if err := os.Remove(containerdSnapshotterFlag); err != nil && !os.IsNotExist(err) {
+			logging.Error.Printf("Failed to remove containerd snapshotter flag: %s", err)
+			return dbus.MakeFailedError(err)
+		}
+		logging.Info.Printf("Containerd snapshotter flag removed")
+	}
+
+	return nil
+}
+
 func InitializeDBus(conn *dbus.Conn) {
+	containerdEnabled := isContainerdSnapshotterEnabled()
+
 	d := system{
 		conn: conn,
 	}
 
-	err := conn.Export(d, objectPath, ifaceName)
+	propsSpec := map[string]map[string]*prop.Prop{
+		ifaceName: {
+			"ContainerdSnapshotterEnabled": {
+				Value:    containerdEnabled,
+				Writable: true,
+				Emit:     prop.EmitTrue,
+				Callback: setContainerdSnapshotterEnabled,
+			},
+		},
+	}
+
+	props, err := prop.Export(conn, objectPath, propsSpec)
+	if err != nil {
+		logging.Critical.Panic(err)
+	}
+	d.props = props
+
+	err = conn.Export(d, objectPath, ifaceName)
 	if err != nil {
 		logging.Critical.Panic(err)
 	}
@@ -99,8 +158,9 @@ func InitializeDBus(conn *dbus.Conn) {
 			introspect.IntrospectData,
 			prop.IntrospectData,
 			{
-				Name:    ifaceName,
-				Methods: introspect.Methods(d),
+				Name:       ifaceName,
+				Methods:    introspect.Methods(d),
+				Properties: props.Introspection(ifaceName),
 			},
 		},
 	}
