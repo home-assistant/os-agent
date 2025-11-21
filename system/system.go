@@ -7,7 +7,6 @@ import (
 
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
-	"github.com/godbus/dbus/v5/prop"
 
 	logging "github.com/home-assistant/os-agent/utils/log"
 )
@@ -24,8 +23,7 @@ const (
 )
 
 type system struct {
-	conn  *dbus.Conn
-	props *prop.Properties
+	conn *dbus.Conn
 }
 
 func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
@@ -85,69 +83,36 @@ func (d system) ClearSSHAuthKeys() *dbus.Error {
 	return nil
 }
 
-func isContainerdSnapshotterEnabled() bool {
-	_, err := os.Stat(containerdSnapshotterFlag)
-	return err == nil
-}
-
-func setContainerdSnapshotterEnabled(c *prop.Change) *dbus.Error {
-	enabled, ok := c.Value.(bool)
-	if !ok {
-		return dbus.MakeFailedError(fmt.Errorf("invalid type for ContainerdSnapshotterEnabled"))
-	}
-
-	if enabled {
-		// Create the flag file if it doesn't exist
-		_, err := os.Stat(containerdSnapshotterFlag)
-		if os.IsNotExist(err) {
-			f, err := os.Create(containerdSnapshotterFlag)
-			if err != nil {
-				logging.Error.Printf("Failed to create containerd snapshotter flag: %s", err)
-				return dbus.MakeFailedError(err)
-			}
-			defer f.Close()
-			logging.Info.Printf("Containerd snapshotter flag created")
-		} else if err != nil {
-			logging.Error.Printf("Failed to check containerd snapshotter flag: %s", err)
+func (d system) MigrateDockerStorageDriver(backend string) *dbus.Error {
+	switch backend {
+	case "overlayfs":
+		// Write the backend name to the flag file
+		err := os.WriteFile(containerdSnapshotterFlag, []byte(backend), 0644)
+		if err != nil {
+			logging.Error.Printf("Failed to write containerd snapshotter flag: %s", err)
 			return dbus.MakeFailedError(err)
 		}
-	} else {
-		// Remove the flag file
+		logging.Info.Printf("Storage driver set to overlayfs containerd snapshotter")
+	case "overlay2":
+		// Graph driver -> remove the flag file to disable the snapshotter
 		if err := os.Remove(containerdSnapshotterFlag); err != nil && !os.IsNotExist(err) {
 			logging.Error.Printf("Failed to remove containerd snapshotter flag: %s", err)
 			return dbus.MakeFailedError(err)
 		}
-		logging.Info.Printf("Containerd snapshotter flag removed")
+		logging.Info.Printf("Storage driver set to overlay2 graph driver")
+	default:
+		return dbus.MakeFailedError(fmt.Errorf("unsupported driver: %s (only 'overlayfs' and 'overlay2' are supported)", backend))
 	}
 
 	return nil
 }
 
 func InitializeDBus(conn *dbus.Conn) {
-	containerdEnabled := isContainerdSnapshotterEnabled()
-
 	d := system{
 		conn: conn,
 	}
 
-	propsSpec := map[string]map[string]*prop.Prop{
-		ifaceName: {
-			"ContainerdSnapshotterEnabled": {
-				Value:    containerdEnabled,
-				Writable: true,
-				Emit:     prop.EmitTrue,
-				Callback: setContainerdSnapshotterEnabled,
-			},
-		},
-	}
-
-	props, err := prop.Export(conn, objectPath, propsSpec)
-	if err != nil {
-		logging.Critical.Panic(err)
-	}
-	d.props = props
-
-	err = conn.Export(d, objectPath, ifaceName)
+	err := conn.Export(d, objectPath, ifaceName)
 	if err != nil {
 		logging.Critical.Panic(err)
 	}
@@ -156,11 +121,9 @@ func InitializeDBus(conn *dbus.Conn) {
 		Name: objectPath,
 		Interfaces: []introspect.Interface{
 			introspect.IntrospectData,
-			prop.IntrospectData,
 			{
-				Name:       ifaceName,
-				Methods:    introspect.Methods(d),
-				Properties: props.Introspection(ifaceName),
+				Name:    ifaceName,
+				Methods: introspect.Methods(d),
 			},
 		},
 	}
