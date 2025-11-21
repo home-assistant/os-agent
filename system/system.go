@@ -87,7 +87,7 @@ func (d system) MigrateDockerStorageDriver(backend string) *dbus.Error {
 	switch backend {
 	case "overlayfs":
 		// Write the backend name to the flag file
-		err := os.WriteFile(containerdSnapshotterFlag, []byte(backend), 0644)
+		err := os.WriteFile(containerdSnapshotterFlag, []byte(backend), 0644) //nolint:gosec
 		if err != nil {
 			logging.Error.Printf("Failed to write containerd snapshotter flag: %s", err)
 			return dbus.MakeFailedError(err)
