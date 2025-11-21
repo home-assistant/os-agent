@@ -7,19 +7,19 @@ import (
 
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
-	"github.com/godbus/dbus/v5/prop"
 
 	logging "github.com/home-assistant/os-agent/utils/log"
 )
 
 const (
-	objectPath             = "/io/hass/os/System"
-	ifaceName              = "io.hass.os.System"
-	labelDataFileSystem    = "hassos-data"
-	labelOverlayFileSystem = "hassos-overlay"
-	kernelCommandLine      = "/mnt/boot/cmdline.txt"
-	tmpKernelCommandLine   = "/mnt/boot/.tmp.cmdline.txt"
-	sshAuthKeyFileName     = "/root/.ssh/authorized_keys"
+	objectPath                = "/io/hass/os/System"
+	ifaceName                 = "io.hass.os.System"
+	labelDataFileSystem       = "hassos-data"
+	labelOverlayFileSystem    = "hassos-overlay"
+	kernelCommandLine         = "/mnt/boot/cmdline.txt"
+	tmpKernelCommandLine      = "/mnt/boot/.tmp.cmdline.txt"
+	sshAuthKeyFileName        = "/root/.ssh/authorized_keys"
+	containerdSnapshotterFlag = "/mnt/data/.docker-use-containerd-snapshotter"
 )
 
 type system struct {
@@ -83,6 +83,30 @@ func (d system) ClearSSHAuthKeys() *dbus.Error {
 	return nil
 }
 
+func (d system) MigrateDockerStorageDriver(backend string) *dbus.Error {
+	switch backend {
+	case "overlayfs":
+		// Write the backend name to the flag file
+		err := os.WriteFile(containerdSnapshotterFlag, []byte(backend), 0644) //nolint:gosec
+		if err != nil {
+			logging.Error.Printf("Failed to write containerd snapshotter flag: %s", err)
+			return dbus.MakeFailedError(err)
+		}
+		logging.Info.Printf("Storage driver set to overlayfs containerd snapshotter")
+	case "overlay2":
+		// Graph driver -> remove the flag file to disable the snapshotter
+		if err := os.Remove(containerdSnapshotterFlag); err != nil && !os.IsNotExist(err) {
+			logging.Error.Printf("Failed to remove containerd snapshotter flag: %s", err)
+			return dbus.MakeFailedError(err)
+		}
+		logging.Info.Printf("Storage driver set to overlay2 graph driver")
+	default:
+		return dbus.MakeFailedError(fmt.Errorf("unsupported driver: %s (only 'overlayfs' and 'overlay2' are supported)", backend))
+	}
+
+	return nil
+}
+
 func InitializeDBus(conn *dbus.Conn) {
 	d := system{
 		conn: conn,
@@ -97,7 +121,6 @@ func InitializeDBus(conn *dbus.Conn) {
 		Name: objectPath,
 		Interfaces: []introspect.Interface{
 			introspect.IntrospectData,
-			prop.IntrospectData,
 			{
 				Name:    ifaceName,
 				Methods: introspect.Methods(d),
