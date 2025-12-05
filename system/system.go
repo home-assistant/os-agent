@@ -93,15 +93,8 @@ func (d system) MigrateDockerStorageDriver(backend string) *dbus.Error {
 			return dbus.MakeFailedError(err)
 		}
 		logging.Info.Printf("Storage driver set to overlayfs containerd snapshotter")
-	case "overlay2":
-		// Graph driver -> remove the flag file to disable the snapshotter
-		if err := os.Remove(containerdSnapshotterFlag); err != nil && !os.IsNotExist(err) {
-			logging.Error.Printf("Failed to remove containerd snapshotter flag: %s", err)
-			return dbus.MakeFailedError(err)
-		}
-		logging.Info.Printf("Storage driver set to overlay2 graph driver")
 	default:
-		return dbus.MakeFailedError(fmt.Errorf("unsupported driver: %s (only 'overlayfs' and 'overlay2' are supported)", backend))
+		return dbus.MakeFailedError(fmt.Errorf("unsupported driver: %s (only 'overlayfs' is currently supported)", backend))
 	}
 
 	return nil
