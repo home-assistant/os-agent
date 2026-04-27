@@ -3,7 +3,7 @@ module github.com/home-assistant/os-agent
 go 1.25
 
 require (
-	github.com/coreos/go-systemd/v22 v22.5.0
+	github.com/coreos/go-systemd/v22 v22.7.0
 	github.com/cyphar/filepath-securejoin v0.6.1
 	github.com/fntlnz/mountinfo v1.0.1
 	github.com/getsentry/sentry-go v0.28.1
