@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	objectPath = "/io/hass/os/Boards/RaspberryPi/Bootloader"
-	ifaceName  = "io.hass.os.Boards.RaspberryPi.Bootloader"
+	objectPath = "/io/hass/os/Boards/RaspberryPi/Firmware"
+	ifaceName  = "io.hass.os.Boards.RaspberryPi.Firmware"
 
 	eepromUpdateCmd  = "rpi-eeprom-update"
 	readStateTimeout = 30 * time.Second
@@ -30,7 +30,7 @@ const (
 	blockedStatusLine = "BLOCKED: yes"
 )
 
-type bootloader struct {
+type firmware struct {
 	conn  *dbus.Conn
 	props *prop.Properties
 }
@@ -164,7 +164,7 @@ func readState() eepromState {
 	return state
 }
 
-func (d bootloader) refreshState() {
+func (d firmware) refreshState() {
 	state := readState()
 	d.props.SetMust(ifaceName, "CurrentVersion", state.currentVersion)
 	d.props.SetMust(ifaceName, "LatestVersion", state.latestVersion)
@@ -176,7 +176,7 @@ func (d bootloader) refreshState() {
 // Update applies the bundled EEPROM (and VL805 where present) firmware. The
 // new bootloader only takes effect after a reboot, so callers should offer a
 // reboot prompt.
-func (d bootloader) Update() *dbus.Error {
+func (d firmware) Update() *dbus.Error {
 	logging.Info.Print("Starting EEPROM update via rpi-eeprom-update -a")
 
 	// Refuse blocked boot devices up front so the caller gets a clean error
@@ -206,7 +206,7 @@ func (d bootloader) Update() *dbus.Error {
 func InitializeDBus(conn *dbus.Conn) {
 	initial := readState()
 
-	d := bootloader{conn: conn}
+	d := firmware{conn: conn}
 
 	propsSpec := map[string]map[string]*prop.Prop{
 		ifaceName: {
