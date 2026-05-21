@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/godbus/dbus/v5"
@@ -31,9 +32,10 @@ const (
 )
 
 type firmware struct {
-	conn  *dbus.Conn
-	props *prop.Properties
-	state eepromState
+	conn     *dbus.Conn
+	props    *prop.Properties
+	state    eepromState
+	updateMu sync.Mutex
 }
 
 type eepromState struct {
@@ -168,7 +170,10 @@ func readState() eepromState {
 // Update applies the bundled EEPROM (and VL805 where present) firmware. The
 // new bootloader only takes effect after a reboot, so callers should offer a
 // reboot prompt.
-func (d firmware) Update() *dbus.Error {
+func (d *firmware) Update() *dbus.Error {
+	d.updateMu.Lock()
+	defer d.updateMu.Unlock()
+
 	// Refuse up front so the caller gets a clean error rather than the tool's
 	// raw output. Rejecting when no update is available also keeps a no-op run
 	// from being surfaced as an applied update needing a reboot.
@@ -200,7 +205,7 @@ func (d firmware) Update() *dbus.Error {
 func InitializeDBus(conn *dbus.Conn) {
 	initial := readState()
 
-	d := firmware{conn: conn, state: initial}
+	d := &firmware{conn: conn, state: initial}
 
 	propsSpec := map[string]map[string]*prop.Prop{
 		ifaceName: {
