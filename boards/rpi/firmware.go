@@ -177,14 +177,18 @@ func (d firmware) refreshState() {
 // new bootloader only takes effect after a reboot, so callers should offer a
 // reboot prompt.
 func (d firmware) Update() *dbus.Error {
-	logging.Info.Print("Starting EEPROM update via rpi-eeprom-update -a")
-
-	// Refuse blocked boot devices up front so the caller gets a clean error
-	// rather than the tool's raw output.
-	if readState().updateBlocked {
+	// Refuse up front so the caller gets a clean error rather than the tool's
+	// raw output. Rejecting when no update is available also keeps a no-op run
+	// from being surfaced as an applied update needing a reboot.
+	state := readState()
+	if state.updateBlocked {
 		return dbus.MakeFailedError(fmt.Errorf("EEPROM update is unavailable on this boot device"))
 	}
+	if !state.updateAvailable {
+		return dbus.MakeFailedError(fmt.Errorf("no EEPROM update available"))
+	}
 
+	logging.Info.Print("Starting EEPROM update via rpi-eeprom-update -a")
 	ctx, cancel := context.WithTimeout(context.Background(), updateTimeout)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, eepromUpdateCmd, "-a")
