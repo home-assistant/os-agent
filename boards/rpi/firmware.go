@@ -33,6 +33,7 @@ const (
 type firmware struct {
 	conn  *dbus.Conn
 	props *prop.Properties
+	state eepromState
 }
 
 type eepromState struct {
@@ -164,15 +165,6 @@ func readState() eepromState {
 	return state
 }
 
-func (d firmware) refreshState() {
-	state := readState()
-	d.props.SetMust(ifaceName, "CurrentVersion", state.currentVersion)
-	d.props.SetMust(ifaceName, "LatestVersion", state.latestVersion)
-	d.props.SetMust(ifaceName, "UpdateAvailable", state.updateAvailable)
-	d.props.SetMust(ifaceName, "UpdateBlocked", state.updateBlocked)
-	d.props.SetMust(ifaceName, "BlockedReason", state.blockedReason)
-}
-
 // Update applies the bundled EEPROM (and VL805 where present) firmware. The
 // new bootloader only takes effect after a reboot, so callers should offer a
 // reboot prompt.
@@ -180,11 +172,10 @@ func (d firmware) Update() *dbus.Error {
 	// Refuse up front so the caller gets a clean error rather than the tool's
 	// raw output. Rejecting when no update is available also keeps a no-op run
 	// from being surfaced as an applied update needing a reboot.
-	state := readState()
-	if state.updateBlocked {
+	if d.state.updateBlocked {
 		return dbus.MakeFailedError(fmt.Errorf("EEPROM update is unavailable on this boot device"))
 	}
-	if !state.updateAvailable {
+	if !d.state.updateAvailable {
 		return dbus.MakeFailedError(fmt.Errorf("no EEPROM update available"))
 	}
 
@@ -199,7 +190,6 @@ func (d firmware) Update() *dbus.Error {
 	}
 	logging.Info.Printf("EEPROM update completed: %s", strings.TrimSpace(string(out)))
 
-	d.refreshState()
 	// A reboot is always required to run the new firmware. Hold this in
 	// UpdatePending so the state is visible until the device reboots; it
 	// resets to false whenever os-agent restarts (i.e. after a reboot).
@@ -210,7 +200,7 @@ func (d firmware) Update() *dbus.Error {
 func InitializeDBus(conn *dbus.Conn) {
 	initial := readState()
 
-	d := firmware{conn: conn}
+	d := firmware{conn: conn, state: initial}
 
 	propsSpec := map[string]map[string]*prop.Prop{
 		ifaceName: {
