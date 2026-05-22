@@ -6,6 +6,7 @@ import (
 	"github.com/godbus/dbus/v5/prop"
 
 	"github.com/home-assistant/os-agent/boards/green"
+	"github.com/home-assistant/os-agent/boards/rpi"
 	"github.com/home-assistant/os-agent/boards/supervised"
 	"github.com/home-assistant/os-agent/boards/yellow"
 	logging "github.com/home-assistant/os-agent/utils/log"
@@ -72,10 +73,13 @@ func InitializeDBus(conn *dbus.Conn, board string) {
 	switch board {
 	case "Yellow":
 		yellow.InitializeDBus(conn)
+		rpi.InitializeDBus(conn)
 	case "Green":
 		green.InitializeDBus(conn)
 	case "Supervised":
 		supervised.InitializeDBus(conn)
+	case "RaspberryPi4", "RaspberryPi5":
+		rpi.InitializeDBus(conn)
 	default:
 		logging.Info.Printf("No specific Board features for %s", board)
 	}
