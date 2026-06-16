@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/godbus/dbus/v5"
@@ -121,7 +122,7 @@ func (d usbip) Remove(identifier string) *dbus.Error {
 	return nil
 }
 
-// List returns the identifiers of all known remote-device config files.
+// List returns the identifiers of all known remote-device config files, sorted.
 func (d usbip) List() ([]string, *dbus.Error) {
 	entries, err := os.ReadDir(configDir)
 	if err != nil {
@@ -138,6 +139,7 @@ func (d usbip) List() ([]string, *dbus.Error) {
 		}
 		identifiers = append(identifiers, entry.Name())
 	}
+	sort.Strings(identifiers)
 	return identifiers, nil
 }
 

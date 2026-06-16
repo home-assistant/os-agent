@@ -3,7 +3,6 @@ package usbip
 import (
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"testing"
 )
@@ -100,7 +99,7 @@ func TestWriteListRemove(t *testing.T) {
 	if derr != nil {
 		t.Fatalf("List() returned error: %v", derr)
 	}
-	sort.Strings(ids)
+	// List() returns identifiers sorted; assert order directly.
 	if len(ids) != 2 || ids[0] != "dev-1" || ids[1] != "dev-2" {
 		t.Errorf("List() = %v, want [dev-1 dev-2]", ids)
 	}
