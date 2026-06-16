@@ -82,9 +82,9 @@ func containsNewline(values ...string) bool {
 	return false
 }
 
-// Write creates or updates the config file for the given identifier. It is an
-// upsert: an existing file is overwritten.
-func (d usbip) Write(identifier string, host string, busID string, port uint32, name string) *dbus.Error {
+// WriteRemoteDevice creates or updates the config file for the given
+// identifier. It is an upsert: an existing file is overwritten.
+func (d usbip) WriteRemoteDevice(identifier string, host string, busID string, port uint32, name string) *dbus.Error {
 	if err := validateIdentifier(identifier); err != nil {
 		return dbus.MakeFailedError(err)
 	}
@@ -112,9 +112,9 @@ func (d usbip) Write(identifier string, host string, busID string, port uint32, 
 	return nil
 }
 
-// Remove deletes the config file for the given identifier. Removing a
-// non-existent identifier is treated as success.
-func (d usbip) Remove(identifier string) *dbus.Error {
+// RemoveRemoteDevice deletes the config file for the given identifier. Removing
+// a non-existent identifier is treated as success.
+func (d usbip) RemoveRemoteDevice(identifier string) *dbus.Error {
 	if err := validateIdentifier(identifier); err != nil {
 		return dbus.MakeFailedError(err)
 	}
@@ -128,8 +128,9 @@ func (d usbip) Remove(identifier string) *dbus.Error {
 	return nil
 }
 
-// List returns the identifiers of all known remote-device config files, sorted.
-func (d usbip) List() ([]string, *dbus.Error) {
+// ListRemoteDevices returns the identifiers of all known remote-device config
+// files, sorted.
+func (d usbip) ListRemoteDevices() ([]string, *dbus.Error) {
 	entries, err := os.ReadDir(configDir)
 	if err != nil {
 		if os.IsNotExist(err) {
