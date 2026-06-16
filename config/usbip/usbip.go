@@ -20,6 +20,7 @@ const (
 	objectPath  = "/io/hass/os/Config/USBIP"
 	ifaceName   = "io.hass.os.Config.USBIP"
 	defaultPort = uint32(3240)
+	configExt   = ".conf"
 )
 
 var (
@@ -49,6 +50,11 @@ func validateIdentifier(identifier string) error {
 		return fmt.Errorf("invalid identifier %q", identifier)
 	}
 	return nil
+}
+
+// configPath returns the on-disk path of the config file for an identifier.
+func configPath(identifier string) string {
+	return filepath.Join(configDir, identifier+configExt)
 }
 
 // buildConfig renders the systemd EnvironmentFile content for a remote device.
@@ -97,7 +103,7 @@ func (d usbip) Write(identifier string, host string, busID string, port uint32, 
 	}
 
 	content := buildConfig(host, busID, port, name)
-	path := filepath.Join(configDir, identifier)
+	path := configPath(identifier)
 	if err := atomic.WriteFile(path, strings.NewReader(content)); err != nil {
 		return dbus.MakeFailedError(fmt.Errorf("failed to write config for %q: %w", identifier, err))
 	}
@@ -113,7 +119,7 @@ func (d usbip) Remove(identifier string) *dbus.Error {
 		return dbus.MakeFailedError(err)
 	}
 
-	path := filepath.Join(configDir, identifier)
+	path := configPath(identifier)
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		return dbus.MakeFailedError(fmt.Errorf("failed to remove config for %q: %w", identifier, err))
 	}
@@ -134,10 +140,10 @@ func (d usbip) List() ([]string, *dbus.Error) {
 
 	identifiers := make([]string, 0, len(entries))
 	for _, entry := range entries {
-		if entry.IsDir() {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), configExt) {
 			continue
 		}
-		identifiers = append(identifiers, entry.Name())
+		identifiers = append(identifiers, strings.TrimSuffix(entry.Name(), configExt))
 	}
 	sort.Strings(identifiers)
 	return identifiers, nil

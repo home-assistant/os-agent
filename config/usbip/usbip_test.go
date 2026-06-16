@@ -73,7 +73,7 @@ func TestWriteListRemove(t *testing.T) {
 		t.Fatalf("Write() returned error: %v", derr)
 	}
 
-	content, err := os.ReadFile(filepath.Join(configDir, "dev-1"))
+	content, err := os.ReadFile(filepath.Join(configDir, "dev-1.conf"))
 	if err != nil {
 		t.Fatalf("reading written config: %v", err)
 	}
@@ -86,7 +86,7 @@ func TestWriteListRemove(t *testing.T) {
 	if derr := d.Write("dev-1", "10.0.0.2", "2-1", 0, "Label"); derr != nil {
 		t.Fatalf("Write() (update) returned error: %v", derr)
 	}
-	content, _ = os.ReadFile(filepath.Join(configDir, "dev-1"))
+	content, _ = os.ReadFile(filepath.Join(configDir, "dev-1.conf"))
 	if !strings.Contains(string(content), "HOST=10.0.0.2\n") {
 		t.Errorf("update did not change host, got %q", string(content))
 	}
@@ -108,8 +108,8 @@ func TestWriteListRemove(t *testing.T) {
 	if derr := d.Remove("dev-1"); derr != nil {
 		t.Fatalf("Remove() returned error: %v", derr)
 	}
-	if _, err := os.Stat(filepath.Join(configDir, "dev-1")); !os.IsNotExist(err) {
-		t.Errorf("file dev-1 should have been removed")
+	if _, err := os.Stat(filepath.Join(configDir, "dev-1.conf")); !os.IsNotExist(err) {
+		t.Errorf("file dev-1.conf should have been removed")
 	}
 
 	// Removing a non-existent identifier is a no-op success.
