@@ -28,8 +28,10 @@ var (
 	configDir = "/run/usbip/remote-devices"
 
 	// validIdentifier restricts identifiers to a safe filename charset. A UUID
-	// (the expected caller-supplied identifier) matches this pattern.
-	validIdentifier = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
+	// (the expected caller-supplied identifier) matches this pattern. Dots are
+	// deliberately excluded so that "", ".", "..", path separators, and any
+	// ".conf" extension can never appear in an identifier.
+	validIdentifier = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
 )
 
 type usbip struct {
@@ -39,16 +41,10 @@ type usbip struct {
 // validateIdentifier ensures the caller-supplied identifier is safe to use as
 // a filename inside configDir, guarding against path traversal.
 func validateIdentifier(identifier string) error {
-	if identifier == "" || identifier == "." || identifier == ".." {
-		return fmt.Errorf("invalid identifier %q", identifier)
-	}
+	// The strict charset (no dots, slashes, or whitespace) already rules out
+	// empty, ".", "..", and any path separators.
 	if !validIdentifier.MatchString(identifier) {
 		return fmt.Errorf("identifier %q contains invalid characters", identifier)
-	}
-	// The config extension is appended by configPath; an identifier carrying it
-	// would yield "<id>.conf.conf" on disk and an ambiguous List() result.
-	if strings.HasSuffix(identifier, configExt) {
-		return fmt.Errorf("identifier %q must not include the %q extension", identifier, configExt)
 	}
 	// Defense in depth: the resolved path must stay directly inside configDir.
 	if filepath.Dir(filepath.Join(configDir, identifier)) != filepath.Clean(configDir) {

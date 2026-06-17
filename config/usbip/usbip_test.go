@@ -45,6 +45,8 @@ func TestValidateIdentifier(t *testing.T) {
 		"new\nline",
 		"device_1.conf",
 		".conf",
+		"a.b",
+		"...",
 	}
 	for _, id := range invalid {
 		if err := validateIdentifier(id); err == nil {
