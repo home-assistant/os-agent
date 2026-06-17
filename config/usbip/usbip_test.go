@@ -26,7 +26,7 @@ func TestValidateIdentifier(t *testing.T) {
 	valid := []string{
 		"a1b2c3",
 		"123e4567-e89b-12d3-a456-426614174000",
-		"device_1.conf",
+		"device_1",
 	}
 	for _, id := range valid {
 		if err := validateIdentifier(id); err != nil {
@@ -43,6 +43,8 @@ func TestValidateIdentifier(t *testing.T) {
 		`a\b`,
 		"with space",
 		"new\nline",
+		"device_1.conf",
+		".conf",
 	}
 	for _, id := range invalid {
 		if err := validateIdentifier(id); err == nil {
@@ -137,5 +139,8 @@ func TestWriteValidation(t *testing.T) {
 	}
 	if derr := d.WriteRemoteDevice("dev", "host", "1-1", 0, "bad\nname"); derr == nil {
 		t.Error("Write() with newline in name should fail")
+	}
+	if derr := d.WriteRemoteDevice("dev", "host", "1-1", 65536, ""); derr == nil {
+		t.Error("Write() with out-of-range port should fail")
 	}
 }

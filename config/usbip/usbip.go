@@ -45,6 +45,11 @@ func validateIdentifier(identifier string) error {
 	if !validIdentifier.MatchString(identifier) {
 		return fmt.Errorf("identifier %q contains invalid characters", identifier)
 	}
+	// The config extension is appended by configPath; an identifier carrying it
+	// would yield "<id>.conf.conf" on disk and an ambiguous List() result.
+	if strings.HasSuffix(identifier, configExt) {
+		return fmt.Errorf("identifier %q must not include the %q extension", identifier, configExt)
+	}
 	// Defense in depth: the resolved path must stay directly inside configDir.
 	if filepath.Dir(filepath.Join(configDir, identifier)) != filepath.Clean(configDir) {
 		return fmt.Errorf("invalid identifier %q", identifier)
@@ -97,6 +102,9 @@ func (d usbip) WriteRemoteDevice(identifier string, host string, busID string, p
 	if containsNewline(host, busID, name) {
 		return dbus.MakeFailedError(fmt.Errorf("fields must not contain newlines"))
 	}
+	if port > 65535 {
+		return dbus.MakeFailedError(fmt.Errorf("port %d out of range (0-65535)", port))
+	}
 
 	if err := os.MkdirAll(configDir, 0o755); err != nil {
 		return dbus.MakeFailedError(fmt.Errorf("failed to create config directory: %w", err))
@@ -120,8 +128,11 @@ func (d usbip) RemoveRemoteDevice(identifier string) *dbus.Error {
 	}
 
 	path := configPath(identifier)
-	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
-		return dbus.MakeFailedError(fmt.Errorf("failed to remove config for %q: %w", identifier, err))
+	if err := os.Remove(path); err != nil {
+		if !os.IsNotExist(err) {
+			return dbus.MakeFailedError(fmt.Errorf("failed to remove config for %q: %w", identifier, err))
+		}
+		return nil
 	}
 
 	logging.Info.Printf("Removed usbip remote-device config %s", identifier)
@@ -144,7 +155,13 @@ func (d usbip) ListRemoteDevices() ([]string, *dbus.Error) {
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), configExt) {
 			continue
 		}
-		identifiers = append(identifiers, strings.TrimSuffix(entry.Name(), configExt))
+		identifier := strings.TrimSuffix(entry.Name(), configExt)
+		// Only surface identifiers we would accept ourselves, keeping List()
+		// consistent with the Write/Remove contract (e.g. drop a bare ".conf").
+		if validateIdentifier(identifier) != nil {
+			continue
+		}
+		identifiers = append(identifiers, identifier)
 	}
 	sort.Strings(identifiers)
 	return identifiers, nil
