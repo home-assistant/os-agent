@@ -3,9 +3,16 @@
 	"build": {
 		"dockerfile": "Dockerfile",
 		"args": {
-			"VARIANT": "1.19-bullseye",
+			"VARIANT": "1.26",
 			"NODE_VERSION": "none"
 		}
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/node:2.1.0": {
+			"version": "lts"
+		},
+		"ghcr.io/devcontainers/features/github-cli:1": {},
+		"ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
 	},
 	"postCreateCommand": "go mod download",
 	"runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined" ],
