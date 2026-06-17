@@ -3,11 +3,11 @@ package usbip
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
 
+	securejoin "github.com/cyphar/filepath-securejoin"
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
 	"github.com/godbus/dbus/v5/prop"
@@ -42,20 +42,18 @@ type usbip struct {
 // a filename inside configDir, guarding against path traversal.
 func validateIdentifier(identifier string) error {
 	// The strict charset (no dots, slashes, or whitespace) already rules out
-	// empty, ".", "..", and any path separators.
+	// empty, ".", "..", and any path separators. configPath additionally runs
+	// the result through securejoin.SecureJoin as defense in depth.
 	if !validIdentifier.MatchString(identifier) {
 		return fmt.Errorf("identifier %q contains invalid characters", identifier)
-	}
-	// Defense in depth: the resolved path must stay directly inside configDir.
-	if filepath.Dir(filepath.Join(configDir, identifier)) != filepath.Clean(configDir) {
-		return fmt.Errorf("invalid identifier %q", identifier)
 	}
 	return nil
 }
 
-// configPath returns the on-disk path of the config file for an identifier.
-func configPath(identifier string) string {
-	return filepath.Join(configDir, identifier+configExt)
+// configPath returns the on-disk path of the config file for an identifier,
+// guaranteed by securejoin.SecureJoin to stay within configDir.
+func configPath(identifier string) (string, error) {
+	return securejoin.SecureJoin(configDir, identifier+configExt)
 }
 
 // buildConfig renders the systemd EnvironmentFile content for a remote device.
@@ -106,8 +104,12 @@ func (d usbip) WriteRemoteDevice(identifier string, host string, busID string, p
 		return dbus.MakeFailedError(fmt.Errorf("failed to create config directory: %w", err))
 	}
 
+	path, err := configPath(identifier)
+	if err != nil {
+		return dbus.MakeFailedError(fmt.Errorf("invalid identifier %q: %w", identifier, err))
+	}
+
 	content := buildConfig(host, busID, port, name)
-	path := configPath(identifier)
 	if err := atomic.WriteFile(path, strings.NewReader(content)); err != nil {
 		return dbus.MakeFailedError(fmt.Errorf("failed to write config for %q: %w", identifier, err))
 	}
@@ -123,7 +125,10 @@ func (d usbip) RemoveRemoteDevice(identifier string) *dbus.Error {
 		return dbus.MakeFailedError(err)
 	}
 
-	path := configPath(identifier)
+	path, err := configPath(identifier)
+	if err != nil {
+		return dbus.MakeFailedError(fmt.Errorf("invalid identifier %q: %w", identifier, err))
+	}
 	if err := os.Remove(path); err != nil {
 		if !os.IsNotExist(err) {
 			return dbus.MakeFailedError(fmt.Errorf("failed to remove config for %q: %w", identifier, err))
