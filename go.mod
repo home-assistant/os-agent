@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/coreos/go-systemd/v22 v22.7.0
-	github.com/cyphar/filepath-securejoin v0.6.1
+	github.com/cyphar/filepath-securejoin v0.7.0
 	github.com/fntlnz/mountinfo v1.0.1
 	github.com/getsentry/sentry-go v0.47.0
 	github.com/godbus/dbus/v5 v5.2.2
