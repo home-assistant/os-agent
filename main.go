@@ -14,7 +14,6 @@ import (
 	"github.com/home-assistant/os-agent/cgroup"
 	"github.com/home-assistant/os-agent/config/swap"
 	"github.com/home-assistant/os-agent/config/timesyncd"
-	"github.com/home-assistant/os-agent/config/usbip"
 	"github.com/home-assistant/os-agent/datadisk"
 	"github.com/home-assistant/os-agent/system"
 	logging "github.com/home-assistant/os-agent/utils/log"
@@ -75,7 +74,6 @@ func main() {
 	boards.InitializeDBus(conn, board)
 	swap.InitializeDBus(conn)
 	timesyncd.InitializeDBus(conn)
-	usbip.InitializeDBus(conn)
 
 	_, err = daemon.SdNotify(false, daemon.SdNotifyReady)
 	if err != nil {
