@@ -25,11 +25,27 @@ const (
 	readStateTimeout = 30 * time.Second
 	updateTimeout    = 5 * time.Minute
 
+	// blockedReasonBootDevice is reported on Raspberry Pi, where a blocked
+	// update is imposed by an unsupported boot device.
 	blockedReasonBootDevice = "unsupported_boot_device"
+	// blockedReasonUnavailable is reported on a CM4-based Yellow, whose EEPROM
+	// can only be flashed via rpiboot, so an in-place update is unavailable.
+	blockedReasonUnavailable = "eeprom_update_unavailable"
 	// blockedStatusLine is the line rpi-eeprom-update prints when the current
-	// boot device cannot apply an update.
+	// hardware cannot apply an update.
 	blockedStatusLine = "BLOCKED: yes"
+
+	boardYellow = "Yellow"
 )
+
+// blockedReasonFor returns the reason a blocked EEPROM update applies to the
+// given board.
+func blockedReasonFor(board string) string {
+	if board == boardYellow {
+		return blockedReasonUnavailable
+	}
+	return blockedReasonBootDevice
+}
 
 type firmware struct {
 	conn     *dbus.Conn
@@ -116,7 +132,7 @@ func composeVersions(blCur, blLat, vlCur, vlLat string) (string, string) {
 	return blCur, blCur
 }
 
-func readState() eepromState {
+func readState(board string) eepromState {
 	ctx, cancel := context.WithTimeout(context.Background(), readStateTimeout)
 	defer cancel()
 
@@ -162,7 +178,7 @@ func readState() eepromState {
 		updateBlocked:   hasOutputLine(outStr, blockedStatusLine),
 	}
 	if state.updateBlocked {
-		state.blockedReason = blockedReasonBootDevice
+		state.blockedReason = blockedReasonFor(board)
 	}
 	return state
 }
@@ -202,8 +218,8 @@ func (d *firmware) Update() *dbus.Error {
 	return nil
 }
 
-func InitializeDBus(conn *dbus.Conn) {
-	initial := readState()
+func InitializeDBus(conn *dbus.Conn, board string) {
+	initial := readState(board)
 
 	d := &firmware{conn: conn, state: initial}
 

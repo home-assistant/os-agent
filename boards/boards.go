@@ -73,13 +73,13 @@ func InitializeDBus(conn *dbus.Conn, board string) {
 	switch board {
 	case "Yellow":
 		yellow.InitializeDBus(conn)
-		rpi.InitializeDBus(conn)
+		rpi.InitializeDBus(conn, board)
 	case "Green":
 		green.InitializeDBus(conn)
 	case "Supervised":
 		supervised.InitializeDBus(conn)
 	case "RaspberryPi4", "RaspberryPi5":
-		rpi.InitializeDBus(conn)
+		rpi.InitializeDBus(conn, board)
 	default:
 		logging.Info.Printf("No specific Board features for %s", board)
 	}
