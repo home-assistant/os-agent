@@ -85,6 +85,23 @@ func TestHasOutputLine(t *testing.T) {
 	}
 }
 
+func TestBlockedReasonFor(t *testing.T) {
+	cases := []struct {
+		board string
+		want  string
+	}{
+		{"Yellow", blockedReasonUnavailable},
+		{"RaspberryPi4", blockedReasonBootDevice},
+		{"RaspberryPi5", blockedReasonBootDevice},
+		{"", blockedReasonBootDevice},
+	}
+	for _, c := range cases {
+		if got := blockedReasonFor(c.board); got != c.want {
+			t.Errorf("blockedReasonFor(%q) = %q, want %q", c.board, got, c.want)
+		}
+	}
+}
+
 func TestComposeVersions(t *testing.T) {
 	cases := []struct {
 		name                       string
