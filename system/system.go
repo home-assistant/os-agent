@@ -17,13 +17,17 @@ import (
 )
 
 const (
-	objectPath                = "/io/hass/os/System"
-	ifaceName                 = "io.hass.os.System"
-	labelDataFileSystem       = "hassos-data"
-	labelOverlayFileSystem    = "hassos-overlay"
-	kernelCommandLine         = "/mnt/boot/cmdline.txt"
-	tmpKernelCommandLine      = "/mnt/boot/.tmp.cmdline.txt"
-	sshAuthKeyFileName        = "/root/.ssh/authorized_keys"
+	objectPath             = "/io/hass/os/System"
+	ifaceName              = "io.hass.os.System"
+	labelDataFileSystem    = "hassos-data"
+	labelOverlayFileSystem = "hassos-overlay"
+	kernelCommandLine      = "/mnt/boot/cmdline.txt"
+	tmpKernelCommandLine   = "/mnt/boot/.tmp.cmdline.txt"
+	sshAuthKeyFileName     = "/root/.ssh/authorized_keys"
+	// dropbear, which consumes authorized_keys on Home Assistant OS, ignores
+	// lines longer than MAX_AUTHKEYS_LINE (3000 bytes) and treats lines over
+	// 10000 bytes as end-of-file, hiding all keys after them.
+	sshAuthKeyMaxLength       = 3000
 	containerdSnapshotterFlag = "/mnt/data/.docker-use-containerd-snapshotter"
 )
 
@@ -62,16 +66,20 @@ func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
 // validateSSHAuthKey checks that newKey is a single well-formed OpenSSH
 // authorized_keys entry and returns it in trimmed form. This is a safety
 // check for the file format, not policy: any entry the OpenSSH parser
-// accepts (including options) passes. Control characters other than tab,
-// which sshd treats as a field separator, are rejected so a single call can
-// never write more than one line.
+// accepts (including options) passes. Control characters are rejected so a
+// single call can never write more than one line. Unlike sshd, dropbear
+// (the consumer of this file on Home Assistant OS) does not treat tab as a
+// field separator, so tabs are rejected as well.
 func validateSSHAuthKey(newKey string) (string, error) {
 	key := strings.TrimSpace(newKey)
 	if key == "" {
 		return "", errors.New("SSH authorized key is empty")
 	}
+	if len(key) > sshAuthKeyMaxLength {
+		return "", fmt.Errorf("SSH authorized key is longer than %d bytes", sshAuthKeyMaxLength)
+	}
 	for _, r := range key {
-		if (r < 0x20 && r != '\t') || r == 0x7f {
+		if r < 0x20 || r == 0x7f {
 			return "", errors.New("SSH authorized key contains control characters")
 		}
 	}
