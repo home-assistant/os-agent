@@ -10,6 +10,7 @@ import (
 const (
 	testKeyEd25519 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDXD8u9KB94/l1YukYflKOsO7KzoSEQD4dNNlWY9zaQP test@example.com"
 	testKeyEcdsa   = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBIGeXP8EbMxj8Ws5m7tdN5YR9BryZNyG+L9670o7eSZog4G03n16bs7Yz0oV1J4sWOkhZNUak6g3IM1jnMLFvgE= ecdsa@example"
+	testKeyRSA     = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDRX06DJ3LwTht9XexLQPaz8zBE+FQIRvxa+AcltbzYHmOH+H6NxUFCK2KPF26aCiaDCzccO14Q44ObSxk6WsG7vsX9TemQL7MEpag6aBOzllKYOcHOEDi6vkKPVEy8MGM5Z0M2tWIkFuJ6lmTbd9zo2Udw/Tv03iftGVFJe0QjIevcbxZF+MFG7iN+RioyA9cRfW3FVOsgwU6ax2NBEoi44MmAnWOEft1QPML7hYHOUpqiC+hR+UKxCLPSaRbsAkA2nFZVOuNixt501KkM2/JLkVfIXbOk1FbL845AWOaECt3XZzVK1RoPZHDJ9+q8Zq60bNQIjo6MsTKnzrfFRPa3 rsa@example.com"
 )
 
 func TestValidateSSHAuthKeyValid(t *testing.T) {
@@ -19,6 +20,7 @@ func TestValidateSSHAuthKeyValid(t *testing.T) {
 		want string
 	}{
 		{"plain key", testKeyEd25519, testKeyEd25519},
+		{"rsa key", testKeyRSA, testKeyRSA},
 		{"surrounding whitespace trimmed", "  " + testKeyEd25519 + "\n", testKeyEd25519},
 		{"no comment", strings.Join(strings.Fields(testKeyEd25519)[:2], " "), strings.Join(strings.Fields(testKeyEd25519)[:2], " ")},
 		{"with options", `restrict,command="/bin/true" ` + testKeyEd25519, `restrict,command="/bin/true" ` + testKeyEd25519},
