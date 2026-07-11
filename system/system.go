@@ -62,15 +62,16 @@ func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
 // validateSSHAuthKey checks that newKey is a single well-formed OpenSSH
 // authorized_keys entry and returns it in trimmed form. This is a safety
 // check for the file format, not policy: any entry the OpenSSH parser
-// accepts (including options) passes. Control characters are rejected so a
-// single call can never write more than one line.
+// accepts (including options) passes. Control characters other than tab,
+// which sshd treats as a field separator, are rejected so a single call can
+// never write more than one line.
 func validateSSHAuthKey(newKey string) (string, error) {
 	key := strings.TrimSpace(newKey)
 	if key == "" {
 		return "", errors.New("SSH authorized key is empty")
 	}
 	for _, r := range key {
-		if r < 0x20 || r == 0x7f {
+		if (r < 0x20 && r != '\t') || r == 0x7f {
 			return "", errors.New("SSH authorized key contains control characters")
 		}
 	}

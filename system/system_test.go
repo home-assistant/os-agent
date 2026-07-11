@@ -22,6 +22,7 @@ func TestValidateSSHAuthKeyValid(t *testing.T) {
 		{"surrounding whitespace trimmed", "  " + testKeyEd25519 + "\n", testKeyEd25519},
 		{"no comment", strings.Join(strings.Fields(testKeyEd25519)[:2], " "), strings.Join(strings.Fields(testKeyEd25519)[:2], " ")},
 		{"with options", `restrict,command="/bin/true" ` + testKeyEd25519, `restrict,command="/bin/true" ` + testKeyEd25519},
+		{"tab separators", strings.ReplaceAll(testKeyEd25519, " ", "\t"), strings.ReplaceAll(testKeyEd25519, " ", "\t")},
 	}
 
 	for _, tt := range tests {
@@ -49,7 +50,7 @@ func TestValidateSSHAuthKeyInvalid(t *testing.T) {
 		{"invalid base64", "ssh-ed25519 !!!invalid!!! test@example.com"},
 		{"newline injection", testKeyEd25519 + "\n" + testKeyEcdsa},
 		{"embedded carriage return", strings.Replace(testKeyEd25519, " test@", "\r test@", 1)},
-		{"embedded tab", strings.Replace(testKeyEd25519, " test@", "\t test@", 1)},
+		{"embedded escape character", strings.Replace(testKeyEd25519, " test@", "\x1b test@", 1)},
 	}
 
 	for _, tt := range tests {
