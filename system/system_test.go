@@ -151,6 +151,41 @@ func TestAddSSHAuthKeyInvalidKeyLeavesFileUntouched(t *testing.T) {
 	}
 }
 
+func TestClearSSHAuthKeysRemovesFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "authorized_keys")
+	if err := os.WriteFile(path, []byte(testKeyEd25519+"\n"), 0o600); err != nil {
+		t.Fatalf("failed to create authorized keys file: %s", err)
+	}
+
+	if err := clearSSHAuthKeys(path); err != nil {
+		t.Fatalf("failed to clear authorized keys: %s", err)
+	}
+
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Errorf("expected authorized keys file to be removed, got %v", err)
+	}
+}
+
+func TestClearSSHAuthKeysMissingFileIsSuccess(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "authorized_keys")
+
+	if err := clearSSHAuthKeys(path); err != nil {
+		t.Errorf("expected clearing a missing file to succeed, got: %s", err)
+	}
+}
+
+func TestClearSSHAuthKeysReportsFailure(t *testing.T) {
+	// A non-empty directory cannot be removed with os.Remove
+	path := filepath.Join(t.TempDir(), "authorized_keys")
+	if err := os.MkdirAll(filepath.Join(path, "child"), 0o700); err != nil {
+		t.Fatalf("failed to create directory: %s", err)
+	}
+
+	if err := clearSSHAuthKeys(path); err == nil {
+		t.Error("expected clearing to report the removal failure")
+	}
+}
+
 func TestAddSSHAuthKeyTightensPermissions(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "authorized_keys")
 	// Files created before atomic writes were introduced were 0644

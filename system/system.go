@@ -130,8 +130,16 @@ func (d system) AddSSHAuthKey(newKey string) *dbus.Error {
 	return nil
 }
 
+func clearSSHAuthKeys(path string) error {
+	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	return nil
+}
+
 func (d system) ClearSSHAuthKeys() *dbus.Error {
-	if err := os.Remove(sshAuthKeyFileName); err != nil && !os.IsNotExist(err) {
+	if err := clearSSHAuthKeys(sshAuthKeyFileName); err != nil {
 		logging.Error.Printf("Failed to delete SSH authentication file %s: %s", sshAuthKeyFileName, err)
 		return dbus.MakeFailedError(err)
 	}
