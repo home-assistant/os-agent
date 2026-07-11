@@ -153,7 +153,7 @@ func TestAddSSHAuthKeyInvalidKeyLeavesFileUntouched(t *testing.T) {
 func TestAddSSHAuthKeyTightensPermissions(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "authorized_keys")
 	// Files created before atomic writes were introduced were 0644
-	if err := os.WriteFile(path, []byte(testKeyEd25519+"\n"), 0o644); err != nil {
+	if err := os.WriteFile(path, []byte(testKeyEd25519+"\n"), 0o644); err != nil { //nolint:gosec
 		t.Fatalf("failed to create authorized keys file: %s", err)
 	}
 
