@@ -47,6 +47,17 @@ func blockedReasonFor(board string) string {
 	return blockedReasonBootDevice
 }
 
+// blockedMessage returns the human-readable error for a blocked EEPROM update,
+// matching the machine-readable reason.
+func blockedMessage(reason string) string {
+	switch reason {
+	case blockedReasonBootDevice:
+		return "EEPROM update is unavailable on this boot device"
+	default:
+		return "EEPROM update is unavailable on this device"
+	}
+}
+
 type firmware struct {
 	conn     *dbus.Conn
 	props    *prop.Properties
@@ -194,7 +205,7 @@ func (d *firmware) Update() *dbus.Error {
 	// raw output. Rejecting when no update is available also keeps a no-op run
 	// from being surfaced as an applied update needing a reboot.
 	if d.state.updateBlocked {
-		return dbus.MakeFailedError(fmt.Errorf("EEPROM update is unavailable on this device"))
+		return dbus.MakeFailedError(errors.New(blockedMessage(d.state.blockedReason)))
 	}
 	if !d.state.updateAvailable {
 		return dbus.MakeFailedError(fmt.Errorf("no EEPROM update available"))

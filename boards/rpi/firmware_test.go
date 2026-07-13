@@ -102,6 +102,15 @@ func TestBlockedReasonFor(t *testing.T) {
 	}
 }
 
+func TestBlockedMessage(t *testing.T) {
+	if got := blockedMessage(blockedReasonBootDevice); got != "EEPROM update is unavailable on this boot device" {
+		t.Errorf("blockedMessage(bootDevice) = %q", got)
+	}
+	if got := blockedMessage(blockedReasonUnavailable); got != "EEPROM update is unavailable on this device" {
+		t.Errorf("blockedMessage(unavailable) = %q", got)
+	}
+}
+
 func TestComposeVersions(t *testing.T) {
 	cases := []struct {
 		name                       string
