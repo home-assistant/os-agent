@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/godbus/dbus/v5"
 	"github.com/godbus/dbus/v5/introspect"
@@ -34,6 +35,11 @@ const (
 type system struct {
 	conn *dbus.Conn
 }
+
+// sshAuthKeyMu serializes modifications of the authorized_keys file: adding
+// a key is a read-modify-write cycle, and D-Bus method calls are dispatched
+// on separate goroutines, so concurrent calls could otherwise lose updates.
+var sshAuthKeyMu sync.Mutex
 
 func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
 
@@ -101,6 +107,9 @@ func addSSHAuthKey(path string, newKey string) error {
 		return err
 	}
 
+	sshAuthKeyMu.Lock()
+	defer sshAuthKeyMu.Unlock()
+
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return fmt.Errorf("failed to create SSH configuration directory: %w", err)
 	}
@@ -139,6 +148,9 @@ func (d system) AddSSHAuthKey(newKey string) *dbus.Error {
 }
 
 func clearSSHAuthKeys(path string) error {
+	sshAuthKeyMu.Lock()
+	defer sshAuthKeyMu.Unlock()
+
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		return err
 	}

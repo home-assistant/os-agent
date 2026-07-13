@@ -1,9 +1,11 @@
 package system
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -151,6 +153,37 @@ func TestAddSSHAuthKeyInvalidKeyLeavesFileUntouched(t *testing.T) {
 	}
 	if string(content) != testKeyEd25519+"\n" {
 		t.Errorf("unexpected file content: %q", content)
+	}
+}
+
+func TestAddSSHAuthKeyConcurrent(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "authorized_keys")
+	const workers = 20
+
+	var wg sync.WaitGroup
+	errs := make([]error, workers)
+	for i := range workers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			errs[i] = addSSHAuthKey(path, fmt.Sprintf("%s worker-%d", testKeyEd25519, i))
+		}()
+	}
+	wg.Wait()
+
+	for i, err := range errs {
+		if err != nil {
+			t.Errorf("worker %d failed to add key: %s", i, err)
+		}
+	}
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("failed to read authorized keys file: %s", err)
+	}
+	lines := strings.Split(strings.TrimSuffix(string(content), "\n"), "\n")
+	if len(lines) != workers {
+		t.Errorf("expected %d keys, got %d — concurrent adds lost updates", workers, len(lines))
 	}
 }
 
