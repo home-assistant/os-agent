@@ -194,7 +194,7 @@ func (d *firmware) Update() *dbus.Error {
 	// raw output. Rejecting when no update is available also keeps a no-op run
 	// from being surfaced as an applied update needing a reboot.
 	if d.state.updateBlocked {
-		return dbus.MakeFailedError(fmt.Errorf("EEPROM update is unavailable on this boot device"))
+		return dbus.MakeFailedError(fmt.Errorf("EEPROM update is unavailable on this device"))
 	}
 	if !d.state.updateAvailable {
 		return dbus.MakeFailedError(fmt.Errorf("no EEPROM update available"))
