@@ -85,6 +85,32 @@ func TestHasOutputLine(t *testing.T) {
 	}
 }
 
+func TestBlockedReasonFor(t *testing.T) {
+	cases := []struct {
+		board string
+		want  string
+	}{
+		{"Yellow", blockedReasonUnavailable},
+		{"RaspberryPi4", blockedReasonBootDevice},
+		{"RaspberryPi5", blockedReasonBootDevice},
+		{"", blockedReasonBootDevice},
+	}
+	for _, c := range cases {
+		if got := blockedReasonFor(c.board); got != c.want {
+			t.Errorf("blockedReasonFor(%q) = %q, want %q", c.board, got, c.want)
+		}
+	}
+}
+
+func TestBlockedMessage(t *testing.T) {
+	if got := blockedMessage(blockedReasonBootDevice); got != "EEPROM update is unavailable on this boot device" {
+		t.Errorf("blockedMessage(bootDevice) = %q", got)
+	}
+	if got := blockedMessage(blockedReasonUnavailable); got != "EEPROM update is unavailable on this device" {
+		t.Errorf("blockedMessage(unavailable) = %q", got)
+	}
+}
+
 func TestComposeVersions(t *testing.T) {
 	cases := []struct {
 		name                       string

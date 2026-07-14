@@ -25,11 +25,38 @@ const (
 	readStateTimeout = 30 * time.Second
 	updateTimeout    = 5 * time.Minute
 
+	// blockedReasonBootDevice is reported on Raspberry Pi, where a blocked
+	// update is imposed by an unsupported boot device.
 	blockedReasonBootDevice = "unsupported_boot_device"
+	// blockedReasonUnavailable is reported on a CM4-based Yellow, whose EEPROM
+	// can only be flashed via rpiboot, so an in-place update is unavailable.
+	blockedReasonUnavailable = "eeprom_update_unavailable"
 	// blockedStatusLine is the line rpi-eeprom-update prints when the current
-	// boot device cannot apply an update.
+	// hardware cannot apply an update.
 	blockedStatusLine = "BLOCKED: yes"
+
+	boardYellow = "Yellow"
 )
+
+// blockedReasonFor returns the reason a blocked EEPROM update applies to the
+// given board.
+func blockedReasonFor(board string) string {
+	if board == boardYellow {
+		return blockedReasonUnavailable
+	}
+	return blockedReasonBootDevice
+}
+
+// blockedMessage returns the human-readable error for a blocked EEPROM update,
+// matching the machine-readable reason.
+func blockedMessage(reason string) string {
+	switch reason {
+	case blockedReasonBootDevice:
+		return "EEPROM update is unavailable on this boot device"
+	default:
+		return "EEPROM update is unavailable on this device"
+	}
+}
 
 type firmware struct {
 	conn     *dbus.Conn
@@ -116,7 +143,7 @@ func composeVersions(blCur, blLat, vlCur, vlLat string) (string, string) {
 	return blCur, blCur
 }
 
-func readState() eepromState {
+func readState(board string) eepromState {
 	ctx, cancel := context.WithTimeout(context.Background(), readStateTimeout)
 	defer cancel()
 
@@ -162,7 +189,7 @@ func readState() eepromState {
 		updateBlocked:   hasOutputLine(outStr, blockedStatusLine),
 	}
 	if state.updateBlocked {
-		state.blockedReason = blockedReasonBootDevice
+		state.blockedReason = blockedReasonFor(board)
 	}
 	return state
 }
@@ -178,7 +205,7 @@ func (d *firmware) Update() *dbus.Error {
 	// raw output. Rejecting when no update is available also keeps a no-op run
 	// from being surfaced as an applied update needing a reboot.
 	if d.state.updateBlocked {
-		return dbus.MakeFailedError(fmt.Errorf("EEPROM update is unavailable on this boot device"))
+		return dbus.MakeFailedError(errors.New(blockedMessage(d.state.blockedReason)))
 	}
 	if !d.state.updateAvailable {
 		return dbus.MakeFailedError(fmt.Errorf("no EEPROM update available"))
@@ -202,8 +229,8 @@ func (d *firmware) Update() *dbus.Error {
 	return nil
 }
 
-func InitializeDBus(conn *dbus.Conn) {
-	initial := readState()
+func InitializeDBus(conn *dbus.Conn, board string) {
+	initial := readState(board)
 
 	d := &firmware{conn: conn, state: initial}
 
