@@ -167,6 +167,41 @@ func (d system) ClearSSHAuthKeys() *dbus.Error {
 	return nil
 }
 
+func listSSHAuthKeys(path string) ([]string, error) {
+	sshAuthKeyMu.Lock()
+	defer sshAuthKeyMu.Unlock()
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return []string{}, nil
+		}
+		return nil, fmt.Errorf("failed to read SSH authorized keys file: %w", err)
+	}
+
+	keys := []string{}
+	for _, line := range strings.Split(string(content), "\n") {
+		line = strings.TrimSpace(line)
+		// Skip blank and comment lines, like sshd and dropbear do
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		keys = append(keys, line)
+	}
+
+	return keys, nil
+}
+
+func (d system) ListSSHAuthKeys() ([]string, *dbus.Error) {
+	keys, err := listSSHAuthKeys(sshAuthKeyFileName)
+	if err != nil {
+		logging.Error.Printf("Failed to list SSH authorized keys: %s", err)
+		return nil, dbus.MakeFailedError(err)
+	}
+
+	return keys, nil
+}
+
 func (d system) MigrateDockerStorageDriver(backend string) *dbus.Error {
 	switch backend {
 	case "overlayfs":

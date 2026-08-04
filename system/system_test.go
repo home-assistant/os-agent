@@ -187,6 +187,53 @@ func TestAddSSHAuthKeyConcurrent(t *testing.T) {
 	}
 }
 
+func TestListSSHAuthKeysMissingFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "authorized_keys")
+
+	keys, err := listSSHAuthKeys(path)
+	if err != nil {
+		t.Fatalf("failed to list authorized keys: %s", err)
+	}
+	if len(keys) != 0 {
+		t.Errorf("expected no keys for a missing file, got %v", keys)
+	}
+}
+
+func TestListSSHAuthKeysSkipsBlankAndCommentLines(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "authorized_keys")
+	content := "# managed keys\n\n" + testKeyEd25519 + "\n\n  \n" + testKeyEcdsa + "\n"
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatalf("failed to create authorized keys file: %s", err)
+	}
+
+	keys, err := listSSHAuthKeys(path)
+	if err != nil {
+		t.Fatalf("failed to list authorized keys: %s", err)
+	}
+	if len(keys) != 2 || keys[0] != testKeyEd25519 || keys[1] != testKeyEcdsa {
+		t.Errorf("unexpected keys: %v", keys)
+	}
+}
+
+func TestListSSHAuthKeysRoundtrip(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "authorized_keys")
+
+	if err := addSSHAuthKey(path, testKeyEd25519); err != nil {
+		t.Fatalf("failed to add first key: %s", err)
+	}
+	if err := addSSHAuthKey(path, testKeyEcdsa); err != nil {
+		t.Fatalf("failed to add second key: %s", err)
+	}
+
+	keys, err := listSSHAuthKeys(path)
+	if err != nil {
+		t.Fatalf("failed to list authorized keys: %s", err)
+	}
+	if len(keys) != 2 || keys[0] != testKeyEd25519 || keys[1] != testKeyEcdsa {
+		t.Errorf("unexpected keys: %v", keys)
+	}
+}
+
 func TestClearSSHAuthKeysRemovesFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "authorized_keys")
 	if err := os.WriteFile(path, []byte(testKeyEd25519+"\n"), 0o600); err != nil {
