@@ -30,6 +30,8 @@ const (
 	// 10000 bytes as end-of-file, hiding all keys after them.
 	sshAuthKeyMaxLength       = 3000
 	containerdSnapshotterFlag = "/mnt/data/.docker-use-containerd-snapshotter"
+	dockerDataRoot            = "/mnt/data/docker"
+	dockerWipeScheduledFlag   = "/mnt/data/docker/.wipe-scheduled"
 )
 
 type system struct {
@@ -217,6 +219,30 @@ func (d system) MigrateDockerStorageDriver(backend string) *dbus.Error {
 	}
 
 	return nil
+}
+
+func (d system) ScheduleDockerStorageReset() (bool, *dbus.Error) {
+
+	// The flag file is created inside the Docker data root, so it gets removed
+	// along with the storage itself.
+	info, err := os.Stat(dockerDataRoot)
+	if err != nil {
+		logging.Error.Printf("Failed to access Docker data root %s: %s", dockerDataRoot, err)
+		return false, dbus.MakeFailedError(err)
+	}
+	if !info.IsDir() {
+		err = fmt.Errorf("Docker data root %s is not a directory", dockerDataRoot) //nolint:staticcheck // ST1005: Docker is a proper noun
+		logging.Error.Printf("%s", err)
+		return false, dbus.MakeFailedError(err)
+	}
+
+	if err := os.WriteFile(dockerWipeScheduledFlag, nil, 0644); err != nil { //nolint:gosec
+		logging.Error.Printf("Failed to write Docker storage reset flag: %s", err)
+		return false, dbus.MakeFailedError(err)
+	}
+
+	logging.Info.Printf("Docker storage will be reset on next reboot!")
+	return true, nil
 }
 
 func InitializeDBus(conn *dbus.Conn) {
