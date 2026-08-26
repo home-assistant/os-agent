@@ -227,7 +227,8 @@ func (d system) ScheduleDockerStorageReset() (bool, *dbus.Error) {
 	// along with the storage itself.
 	info, err := os.Stat(dockerDataRoot)
 	if err != nil {
-		logging.Error.Printf("Failed to access Docker data root %s: %s", dockerDataRoot, err)
+		err = fmt.Errorf("failed to access Docker data root: %w", err)
+		logging.Error.Printf("%s", err)
 		return false, dbus.MakeFailedError(err)
 	}
 	if !info.IsDir() {
@@ -237,7 +238,8 @@ func (d system) ScheduleDockerStorageReset() (bool, *dbus.Error) {
 	}
 
 	if err := os.WriteFile(dockerWipeScheduledFlag, nil, 0644); err != nil { //nolint:gosec
-		logging.Error.Printf("Failed to write Docker storage reset flag: %s", err)
+		err = fmt.Errorf("failed to write Docker storage reset flag: %w", err)
+		logging.Error.Printf("%s", err)
 		return false, dbus.MakeFailedError(err)
 	}
 
