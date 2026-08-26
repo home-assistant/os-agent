@@ -45,7 +45,8 @@ func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
 
 	data, err := os.ReadFile(kernelCommandLine)
 	if err != nil {
-		fmt.Println(err)
+		err = fmt.Errorf("failed to read kernel command line: %w", err)
+		logging.Error.Printf("%s", err)
 		return false, dbus.MakeFailedError(err)
 	}
 
@@ -54,14 +55,16 @@ func (d system) ScheduleWipeDevice() (bool, *dbus.Error) {
 
 	err = os.WriteFile(tmpKernelCommandLine, []byte(datastr), 0644) //nolint:gosec
 	if err != nil {
-		fmt.Println(err)
+		err = fmt.Errorf("failed to write kernel command line: %w", err)
+		logging.Error.Printf("%s", err)
 		return false, dbus.MakeFailedError(err)
 	}
 
 	// Boot is mounted sync on Home Assistant OS, so just rename should be fine.
 	err = os.Rename(tmpKernelCommandLine, kernelCommandLine)
 	if err != nil {
-		fmt.Println(err)
+		err = fmt.Errorf("failed to replace kernel command line: %w", err)
+		logging.Error.Printf("%s", err)
 		return false, dbus.MakeFailedError(err)
 	}
 
@@ -208,7 +211,8 @@ func (d system) MigrateDockerStorageDriver(backend string) *dbus.Error {
 		// Write the backend name to the flag file
 		err := os.WriteFile(containerdSnapshotterFlag, []byte(backend), 0644) //nolint:gosec
 		if err != nil {
-			logging.Error.Printf("Failed to write containerd snapshotter flag: %s", err)
+			err = fmt.Errorf("failed to write containerd snapshotter flag: %w", err)
+			logging.Error.Printf("%s", err)
 			return dbus.MakeFailedError(err)
 		}
 		logging.Info.Printf("Storage driver set to overlayfs containerd snapshotter")
