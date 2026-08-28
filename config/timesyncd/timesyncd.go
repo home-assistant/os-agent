@@ -15,7 +15,9 @@ import (
 const (
 	objectPath    = "/io/hass/os/Config/Timesyncd"
 	ifaceName     = "io.hass.os.Config.Timesyncd"
-	timesyncdConf = "/etc/systemd/timesyncd.conf"
+	timesyncdConf = "/etc/systemd/timesyncd.conf.d/50-os-agent.conf"
+
+	timeSectionRegexp = `^\s*\[Time\]\s*$`
 )
 
 var (
@@ -86,7 +88,27 @@ func getTimesyncdConfigProperty(property string) []string {
 	return servers
 }
 
+// ensureTimeSection adds the [Time] section header so the drop-in is valid
+// when the file does not exist yet.
+func ensureTimeSection() error {
+	found, err := configFile.Find(timeSectionRegexp, "", true)
+	if err != nil {
+		return err
+	}
+	if found != nil {
+		return nil
+	}
+
+	var params = lineinfile.NewPresentParams("[Time]")
+	params.Regexp = regexp.MustCompile(timeSectionRegexp)
+	return configFile.Present(params)
+}
+
 func setTimesyncdConfigProperty(property string, value string) error {
+	if err := ensureTimeSection(); err != nil {
+		return fmt.Errorf("failed to set %s: %w", property, err)
+	}
+
 	var params = lineinfile.NewPresentParams(property + "=" + value)
 	params.Regexp, _ = regexp.Compile(`^\s*#?\s*(` + property + `=).*$`)
 	// Keep it simple, timesyncd.conf only has the [Time] section
