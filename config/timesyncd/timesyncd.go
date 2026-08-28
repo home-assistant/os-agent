@@ -43,9 +43,7 @@ func setNTPServer(c *prop.Change) *dbus.Error {
 		return dbus.MakeFailedError(fmt.Errorf("invalid type for NTPServer"))
 	}
 
-	value := strings.Join(servers, " ")
-
-	if err := setTimesyncdConfigProperty("NTP", value); err != nil {
+	if err := updateTimesyncdConfigProperty("NTP", servers); err != nil {
 		return dbus.MakeFailedError(err)
 	}
 
@@ -59,9 +57,7 @@ func setFallbackNTPServer(c *prop.Change) *dbus.Error {
 		return dbus.MakeFailedError(fmt.Errorf("invalid type for FallbackNTPServer"))
 	}
 
-	value := strings.Join(servers, " ")
-
-	if err := setTimesyncdConfigProperty("FallbackNTP", value); err != nil {
+	if err := updateTimesyncdConfigProperty("FallbackNTP", servers); err != nil {
 		return dbus.MakeFailedError(err)
 	}
 
@@ -84,6 +80,26 @@ func getTimesyncdConfigProperty(property string) []string {
 	}
 
 	return servers
+}
+
+// updateTimesyncdConfigProperty removes the property when servers is empty, so
+// lower-priority configuration (e.g. servers from DHCP) applies again.
+func updateTimesyncdConfigProperty(property string, servers []string) error {
+	if len(servers) == 0 {
+		return unsetTimesyncdConfigProperty(property)
+	}
+	return setTimesyncdConfigProperty(property, strings.Join(servers, " "))
+}
+
+func unsetTimesyncdConfigProperty(property string) error {
+	var params = lineinfile.NewAbsentParams()
+	params.Regexp, _ = regexp.Compile(`^\s*(` + property + `=).*$`)
+	params.After = `\[Time\]`
+	if err := configFile.Absent(params); err != nil {
+		return fmt.Errorf("failed to unset %s: %w", property, err)
+	}
+
+	return nil
 }
 
 func setTimesyncdConfigProperty(property string, value string) error {
