@@ -12,7 +12,7 @@ import (
 func useTempConfig(t *testing.T, content string) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "timesyncd.conf")
-	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil { //nolint:gosec
 		t.Fatal(err)
 	}
 	orig := configFile
