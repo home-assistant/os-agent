@@ -10,7 +10,7 @@ require (
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/natefinch/atomic v1.0.1
 	github.com/opencontainers/runtime-spec v1.3.0
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.56.0
 )
 
 require (
