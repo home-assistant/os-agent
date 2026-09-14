@@ -2,9 +2,12 @@ package apparmor
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/godbus/dbus/v5"
@@ -45,11 +48,79 @@ func getAppArmorVersion() string {
 	return string(found[1])
 }
 
+// profileNames returns the names of all profiles defined in the given file as
+// reported by the parser, one entry per profile. Child profiles and hats are
+// reported as "parent//child".
+func profileNames(ctx context.Context, profilePath string) ([]string, error) {
+	cmd := exec.CommandContext(ctx, appArmorParserCmd, "--names", "--skip-cache", profilePath)
+	out, err := cmd.Output()
+	if err != nil {
+		// The last line of stderr carries the actual parser error; earlier
+		// lines are warnings such as a missing cache interface.
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			stderr := strings.Split(strings.TrimSpace(string(exitErr.Stderr)), "\n")
+			if last := strings.TrimSpace(stderr[len(stderr)-1]); last != "" {
+				return nil, errors.New(last)
+			}
+		}
+		return nil, err
+	}
+
+	var names []string
+	for _, line := range strings.Split(string(out), "\n") {
+		if name := strings.TrimSpace(line); name != "" {
+			names = append(names, name)
+		}
+	}
+	return names, nil
+}
+
+// checkProfileNames verifies that a profile file only defines the profile
+// named after the file itself, plus child profiles and hats of that profile.
+//
+// The parser loads (and with --replace, redefines) every profile found in a
+// file regardless of its name. Callers store each profile in a file named
+// after it, so anything else in the file would replace an unrelated profile,
+// for example docker-default or the Supervisor's own profile.
+func checkProfileNames(profilePath string, names []string) error {
+	expected := filepath.Base(profilePath)
+	found := false
+
+	for _, name := range names {
+		switch {
+		case name == expected:
+			found = true
+		case strings.HasPrefix(name, expected+"//"):
+			// child profile or hat of the expected profile
+		default:
+			return fmt.Errorf("profile file '%s' defines unexpected profile '%s'", profilePath, name)
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("profile file '%s' does not define profile '%s'", profilePath, expected)
+	}
+	return nil
+}
+
+func validateProfile(ctx context.Context, profilePath string) error {
+	names, err := profileNames(ctx, profilePath)
+	if err != nil {
+		return fmt.Errorf("can't parse profile '%s': %w", profilePath, err)
+	}
+	return checkProfileNames(profilePath, names)
+}
+
 func (d apparmor) LoadProfile(profilePath string, cachePath string) (bool, *dbus.Error) {
 	logging.Info.Printf("Load AppArmor profile '%s'.", profilePath)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	if err := validateProfile(ctx, profilePath); err != nil {
+		return false, dbus.MakeFailedError(err)
+	}
+
 	cmd := exec.CommandContext(ctx, appArmorParserCmd, "--replace", "--write-cache", "--cache-loc", cachePath, profilePath)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -65,6 +136,10 @@ func (d apparmor) UnloadProfile(profilePath string, cachePath string) (bool, *db
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	if err := validateProfile(ctx, profilePath); err != nil {
+		return false, dbus.MakeFailedError(err)
+	}
+
 	cmd := exec.CommandContext(ctx, appArmorParserCmd, "--remove", "--write-cache", "--cache-loc", cachePath, profilePath)
 
 	out, err := cmd.CombinedOutput()
