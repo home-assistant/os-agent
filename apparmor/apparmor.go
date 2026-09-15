@@ -68,8 +68,8 @@ func profileNames(ctx context.Context, profilePath string) ([]string, error) {
 	}
 
 	var names []string
-	for _, line := range strings.Split(string(out), "\n") {
-		if name := strings.TrimSpace(line); name != "" {
+	for _, name := range strings.Split(string(out), "\n") {
+		if name != "" {
 			names = append(names, name)
 		}
 	}

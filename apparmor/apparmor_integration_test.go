@@ -26,6 +26,7 @@ func TestValidateProfileWithParser(t *testing.T) {
 	barePath := writeProfile(t, dir, "local_bare", "#include <tunables/global>\nprofile local_bare {\n}\n/usr/bin/foo {\n}\n")
 	syntax := writeProfile(t, dir, "local_syntax", "profile local_syntax {\n  this is not valid,\n")
 	wrongName := writeProfile(t, dir, "local_wrong", "profile something_else {\n}\n")
+	trailingSpace := writeProfile(t, dir, "local_space", "profile \"local_space \" {\n}\n")
 
 	if err := validateProfile(context.Background(), valid); err != nil {
 		t.Fatalf("valid profile rejected: %s", err)
@@ -35,6 +36,7 @@ func TestValidateProfileWithParser(t *testing.T) {
 		{barePath, "unexpected profile '/usr/bin/foo'"},
 		{syntax, "can't parse profile"},
 		{wrongName, "unexpected profile 'something_else'"},
+		{trailingSpace, "unexpected profile 'local_space '"},
 	} {
 		err := validateProfile(context.Background(), tt.path)
 		if err == nil || !strings.Contains(err.Error(), tt.want) {
