@@ -1,0 +1,50 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+
+  "enabledManagers": ["github-actions", "gomod"],
+
+  "minimumReleaseAge": "3 days",
+  "postUpdateOptions": ["gomodTidy"],
+
+  "semanticCommits": "disabled",
+  "labels": ["dependencies"],
+
+  "packageRules": [
+    {
+      "description": "Label Go module updates like Dependabot did",
+      "matchManagers": ["gomod"],
+      "addLabels": ["go"]
+    },
+    {
+      "description": "Label GitHub Actions updates like Dependabot did",
+      "matchManagers": ["github-actions"],
+      "addLabels": ["github_actions"]
+    },
+    {
+      "description": "The golang.org/x modules are released together every month",
+      "matchPackageNames": ["golang.org/x/**"],
+      "groupName": "golang.org/x",
+      "groupSlug": "golang-x"
+    },
+    {
+      "description": "Leave the Go version in go.mod alone. Moving to a new Go release is a deliberate change, together with the version in the workflows.",
+      "matchManagers": ["gomod"],
+      "matchDepTypes": ["golang", "toolchain"],
+      "enabled": false
+    },
+    {
+      "description": "Leave runner labels and action version inputs alone, Dependabot never updated those",
+      "matchManagers": ["github-actions"],
+      "matchDepTypes": ["github-runner", "uses-with"],
+      "enabled": false
+    },
+    {
+      "description": "Our own actions that follow a branch (like home-assistant/actions@master) float on purpose. Pinning them would open a digest PR in every repository for each change to them. Our own actions on a version tag are pinned like any other.",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["home-assistant/**"],
+      "matchCurrentValue": "/^(dev|main|master)$/",
+      "pinDigests": false
+    }
+  ]
+}
