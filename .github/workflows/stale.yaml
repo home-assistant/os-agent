@@ -8,4 +8,4 @@ on:
 
 jobs:
   workflows:
-    uses: home-assistant/actions/.github/workflows/stale.yaml@master
+    uses: home-assistant/actions/.github/workflows/stale.yaml@07f46fd2e19967768b5fd3000f91f857452b767c # 2026.11.0
